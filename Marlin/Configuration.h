@@ -337,7 +337,6 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 //
 //
 
-
 // sscara: disbales only xy max endstops (z max endstop is avaiable by design)
 #define DISABLE_XYMAX_ENDSTOPS
 
