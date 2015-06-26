@@ -151,6 +151,11 @@
 #define MSG_BABYSTEPPING_Z                  "Babystepping Z"
 #define MSG_SERIAL_ERROR_MENU_STRUCTURE     "Error in menu structure"
 
+
+#ifdef SCARA
+  #define MSG_XSCALE                        "X Scale"
+  #define MSG_YSCALE                        "Y Scale"
+#endif
 // LCD Menu Messages
 
 #include LANGUAGE_INCLUDE
