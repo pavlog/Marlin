@@ -28,9 +28,6 @@
 #define SCARA_offset_y -35 //mm
 #define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
 
-#define THETA_HOMING_OFFSET 0	//calculatated from Calibration Guide and command M360 / M114 see picture in http://reprap.harleystudio.co.za/?page_id=1073
-#define PSI_HOMING_OFFSET 0  // calculatated from Calibration Guide and command M364 / M114 see picture in http://reprap.harleystudio.co.za/?page_id=1073
-
 //some helper variables to make kinematics faster
 #define L1_2 sq(Linkage_1) // do not change
 #define L2_2 sq(Linkage_2) // do not change
@@ -50,7 +47,6 @@
 // Serial port 0 is still used by the Arduino bootloader regardless of this setting.
 #define SERIAL_PORT 0
 
-// This determines the communication speed of the printer
 // This determines the communication speed of the printer
 #define BAUDRATE 250000
 
@@ -122,7 +118,7 @@
 #define TEMP_SENSOR_0 1
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
-#define TEMP_SENSOR_BED 1
+#define TEMP_SENSOR_BED 0
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
 //#define TEMP_SENSOR_1_AS_REDUNDANT
@@ -328,10 +324,30 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 //#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
 
+// sscara
+//                         Nozle
+//                          \/
+//
+//            bed[--------------------------------] z min
+//
+//
+//
+//
+//   printer base[--------------------------------] z max
+//
+//
+
+
+// sscara: disbales only xy max endstops (z max endstop is avaiable by design)
+#define DISABLE_XYMAX_ENDSTOPS
+
 // Disable max endstops for compatibility with endstop checking routine
 #if defined(COREXY) && !defined(DISABLE_MAX_ENDSTOPS)
   #define DISABLE_MAX_ENDSTOPS
 #endif
+
+
+
 
 // For Inverting Stepper Enable Pins (Active Low) use 0, Non Inverting (Active High) use 1
 #define X_ENABLE_ON 0
@@ -355,8 +371,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
 // ENDSTOP SETTINGS:
 // Sets direction of endstop	s when homing; 1=MAX, -1=MIN
-#define X_HOME_DIR 1
-#define Y_HOME_DIR 1
+#define X_HOME_DIR -1
+#define Y_HOME_DIR -1
 #define Z_HOME_DIR -1
 
 #define min_software_endstops true // If true, axis won't move to coordinates less than HOME_POS.
@@ -470,7 +486,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
 //Manual homing switch locations:
 // For deltabots this means top and center of the Cartesian print volume.
-// For SCARA: Offset between HomingPosition and Bed X=0 / Y=0
+// For sscara: left bottom bed corner SCARA: Offset between HomingPosition and Bed X=0 / Y=0
 #define MANUAL_X_HOME_POS -50.
 #define MANUAL_Y_HOME_POS -35.
 #define MANUAL_Z_HOME_POS 0.1  // Distance between nozzle and print surface after homing.
@@ -552,7 +568,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
 // The RepRapDiscount Smart Controller (white PCB)
 // http://reprap.org/wiki/RepRapDiscount_Smart_Controller
-//#define REPRAP_DISCOUNT_SMART_CONTROLLER
+#define REPRAP_DISCOUNT_SMART_CONTROLLER
 
 // The GADGETS3D G3D LCD/SD Controller (blue PCB)
 // http://reprap.org/wiki/RAMPS_1.3/1.4_GADGETS3D_Shield_with_Panel
