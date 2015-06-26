@@ -25,7 +25,7 @@
 // SCARA tower offset (position of Tower relative to bed zero position) 
 // This needs to be reasonably accurate as it defines the printbed position in the SCARA space.
 #define SCARA_offset_x 50 //mm   
-#define SCARA_offset_y -35 //mm
+#define SCARA_offset_y -30 //mm
 #define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
 
 //some helper variables to make kinematics faster
@@ -488,7 +488,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // For deltabots this means top and center of the Cartesian print volume.
 // For sscara: left bottom bed corner SCARA: Offset between HomingPosition and Bed X=0 / Y=0
 #define MANUAL_X_HOME_POS -50.
-#define MANUAL_Y_HOME_POS -35.
+#define MANUAL_Y_HOME_POS 0.
 #define MANUAL_Z_HOME_POS 0.1  // Distance between nozzle and print surface after homing.
 
 
