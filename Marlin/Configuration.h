@@ -292,17 +292,18 @@ your extruder heater takes 2 minutes to hit the target on heating.
 // Uncomment the following line to enable CoreXY kinematics
 // #define COREXY
 
+// sscara used mechanical endstops withhout pullups
 // coarse Endstop Settings
-//#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
+#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
 
 #ifndef ENDSTOPPULLUPS
   // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
-  // #define ENDSTOPPULLUP_XMAX
-  // #define ENDSTOPPULLUP_YMAX
-   #define ENDSTOPPULLUP_ZMAX  // open pin, inverted
-   #define ENDSTOPPULLUP_XMIN  // open pin, inverted
-   #define ENDSTOPPULLUP_YMIN  // open pin, inverted
-   #define ENDSTOPPULLUP_ZMIN
+   //#define ENDSTOPPULLUP_XMAX
+   //#define ENDSTOPPULLUP_YMAX
+   //#define ENDSTOPPULLUP_ZMAX
+   //#define ENDSTOPPULLUP_XMIN
+   //#define ENDSTOPPULLUP_YMIN
+   //#define ENDSTOPPULLUP_ZMIN
 #endif
 
 #ifdef ENDSTOPPULLUPS
@@ -315,12 +316,12 @@ your extruder heater takes 2 minutes to hit the target on heating.
 #endif
 
 // The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
-const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Z_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool X_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Y_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Y_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 //#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
 
@@ -373,18 +374,18 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // Sets direction of endstop	s when homing; 1=MAX, -1=MIN
 #define X_HOME_DIR -1
 #define Y_HOME_DIR -1
-#define Z_HOME_DIR -1
+#define Z_HOME_DIR 1
 
 #define min_software_endstops true // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below.
 
 // Travel limits after homing
-#define X_MAX_POS 100
-#define X_MIN_POS 0
+#define X_MAX_POS 50
+#define X_MIN_POS -50
 #define Y_MAX_POS 100
 #define Y_MIN_POS 0
-#define Z_MAX_POS 129
-#define Z_MIN_POS MANUAL_Z_HOME_POS
+#define Z_MAX_POS MANUAL_Z_HOME_POS
+#define Z_MIN_POS 0
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
 #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
@@ -489,17 +490,16 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // For sscara: left bottom bed corner SCARA: Offset between HomingPosition and Bed X=0 / Y=0
 #define MANUAL_X_HOME_POS -50.
 #define MANUAL_Y_HOME_POS 0.
-#define MANUAL_Z_HOME_POS 0.1  // Distance between nozzle and print surface after homing.
+#define MANUAL_Z_HOME_POS 120  // Distance between nozzle and print surface after homing.
 
 
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
-#define HOMING_FEEDRATE {40*60, 40*60, 10*60, 0}  // set the homing speeds (mm/min)
+#define HOMING_FEEDRATE {10*60, 10*60, 10*60, 0}  // set the homing speeds (mm/min)
 
 // default settings
-
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {103.69,106.65,200/1.25,1000}  // default steps per unit for SCARA
-#define DEFAULT_MAX_FEEDRATE          {300, 300, 30, 25}    // (mm/sec)
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,200,300}  // default steps per unit for SCARA
+#define DEFAULT_MAX_FEEDRATE          {30, 30, 30, 70}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {300,300,20,1000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          400    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
@@ -535,7 +535,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // M501 - reads parameters from EEPROM (if you need reset them after you changed them temporarily).
 // M502 - reverts to the default "factory settings".  You still need to store them in EEPROM afterwards if you want to.
 //define this to enable EEPROM support
-//#define EEPROM_SETTINGS
+#define EEPROM_SETTINGS
 //to disable EEPROM Serial responses and decrease program space by ~1700 byte: comment this out:
 // please keep turned on if you can.
 #define EEPROM_CHITCHAT
