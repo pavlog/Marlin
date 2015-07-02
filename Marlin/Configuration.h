@@ -48,7 +48,7 @@
 #define SERIAL_PORT 0
 
 // This determines the communication speed of the printer
-#define BAUDRATE 115200 // i use bluetooth connection HC-05
+#define BAUDRATE 115200 // i use bluetooth HC-05 module
 
 // This enables the serial port associated to the Bluetooth interface
 #define BTENABLED              // Enable BT interface on AT90USB devices
@@ -60,7 +60,7 @@
 #endif
 
 // Define this to set a custom name for your generic Mendel,
-#define CUSTOM_MENDEL_NAME "SScara"
+#define CUSTOM_MENDEL_NAME "Kuzya" // my 17+ years old cat, will die in a next few days due to cancer (
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
