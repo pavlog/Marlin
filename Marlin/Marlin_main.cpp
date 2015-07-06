@@ -178,11 +178,13 @@
 // M351 - Toggle MS1 MS2 pins directly.
 
 // ************ SCARA Specific - This can change to suit future G-code regulations
+// ignore when FIVE_BAR defined
 // M360 - SCARA calibration: Move to cal-position ThetaA (0 deg calibration)
 // M361 - SCARA calibration: Move to cal-position ThetaB (90 deg calibration - steps per degree)
 // M362 - SCARA calibration: Move to cal-position PsiA (0 deg calibration)
 // M363 - SCARA calibration: Move to cal-position PsiB (90 deg calibration - steps per degree)
 // M364 - SCARA calibration: Move to cal-position PSIC (90 deg to Theta calibration position)
+// not ignored for FIVE_BAR
 // M365 - SCARA calibration: Scaling factor, X, Y, Z axis
 //************* SCARA End ***************
 
@@ -941,7 +943,21 @@ static void axis_is_at_home(int axis) {
    
    if (axis < 2)
    {
-   
+
+		 #if defined(FIVE_BAR)
+     for (i=0; i<3; i++)
+     {
+        homeposition[i] = base_home_pos(i)+add_homing[i]; 
+     }  
+			// SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
+   		//  SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
+   		// Works out real Homeposition angles using inverse kinematics, 
+   		// and calculates homing offset using forward kinematics
+     calculate_delta(homeposition);
+     
+    // SERIAL_ECHOPGM("base q1= "); SERIAL_ECHO(delta[X_AXIS]);
+    // SERIAL_ECHOPGM(" base q2="); SERIAL_ECHOLN(delta[Y_AXIS]);
+		 #else   
      for (i=0; i<3; i++)
      {
         homeposition[i] = base_home_pos(i); 
@@ -960,6 +976,7 @@ static void axis_is_at_home(int axis) {
         delta[i] -= add_homing[i];
      } 
      
+			#endif
     // SERIAL_ECHOPGM("addhome X="); SERIAL_ECHO(add_homing[X_AXIS]);
 	// SERIAL_ECHOPGM(" addhome Y="); SERIAL_ECHO(add_homing[Y_AXIS]);
     // SERIAL_ECHOPGM(" addhome Theta="); SERIAL_ECHO(delta[X_AXIS]);
@@ -1557,7 +1574,7 @@ void process_commands()
       if(code_seen(axis_codes[X_AXIS]))
       {
         if(code_value_long() != 0) {
-		#ifdef SCARA
+		#ifdef SCARA && !defined(FIVE_BAR)
 		   current_position[X_AXIS]=code_value();
 		#else
 		   current_position[X_AXIS]=code_value()+add_homing[X_AXIS];
@@ -1567,8 +1584,8 @@ void process_commands()
 
       if(code_seen(axis_codes[Y_AXIS])) {
         if(code_value_long() != 0) {
-         #ifdef SCARA
-		   current_position[Y_AXIS]=code_value();
+		#ifdef SCARA && !defined(FIVE_BAR)
+			current_position[Y_AXIS]=code_value();
 		#else
 		   current_position[Y_AXIS]=code_value()+add_homing[Y_AXIS];
 		#endif
@@ -1859,7 +1876,7 @@ void process_commands()
              plan_set_e_position(current_position[E_AXIS]);
            }
            else {
-#ifdef SCARA
+#ifdef SCARA && !defined(FIVE_BAR)
 		if (i == X_AXIS || i == Y_AXIS) {
                 	current_position[i] = code_value();  
 		}
@@ -2760,7 +2777,7 @@ Sigma_Exit:
       SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
 
       SERIAL_PROTOCOLLN("");
-#ifdef SCARA
+#ifdef SCARA && !defined(FIVE_BAR)
 	  SERIAL_PROTOCOLPGM("SCARA Theta:");
       SERIAL_PROTOCOL(delta[X_AXIS]);
       SERIAL_PROTOCOLPGM("   Psi+Theta:");
@@ -2914,7 +2931,7 @@ Sigma_Exit:
       {
         if(code_seen(axis_codes[i])) add_homing[i] = code_value();
       }
-	  #ifdef SCARA
+	  #ifdef SCARA && !defined(FIVE_BAR)
 	   if(code_seen('T'))       // Theta
       {
         add_homing[X_AXIS] = code_value() ;
@@ -3304,6 +3321,7 @@ Sigma_Exit:
     }
     break;
 	#ifdef SCARA
+	#if !defined(FIVE_BAR)
 	case 360:  // M360 SCARA Theta pos1
       SERIAL_ECHOLN(" Cal: Theta 0 ");
       //SoftEndsEnabled = false;              // Ignore soft endstops during calibration
@@ -3390,6 +3408,7 @@ Sigma_Exit:
         return;
       }
     break;
+	#endif
     case 365: // M364  Set SCARA scaling for X Y Z
       for(int8_t i=0; i < 3; i++) 
       {
