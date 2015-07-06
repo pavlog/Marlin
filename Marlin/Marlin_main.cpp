@@ -348,7 +348,7 @@ const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
 static float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
 
 #ifndef DELTA
-static float delta[3] = {0.0, 0.0, 0.0};
+float delta[3] = {0.0, 0.0, 0.0};
 #endif
 
 static float offset[3] = {0.0, 0.0, 0.0};
@@ -4224,26 +4224,53 @@ void controllerFan()
 #ifdef SCARA
 void calculate_SCARA_forward_Transform(float f_scara[3])
 {
-  // Perform forward kinematics, and place results in delta[3]
-  // The maths and first version has been done by QHARLEY . Integrated into masterbranch 06/2014 and slightly restructured by Joachim Cerny in June 2014
-  
-  float x_sin, x_cos, y_sin, y_cos;
+    // Perform forward kinematics, and place results in delta[3]
+    // The maths and first version has been done by QHARLEY . Integrated into masterbranch 06/2014 and slightly restructured by Joachim Cerny in June 2014
   
     //SERIAL_ECHOPGM("f_delta x="); SERIAL_ECHO(f_scara[X_AXIS]);
     //SERIAL_ECHOPGM(" y="); SERIAL_ECHO(f_scara[Y_AXIS]);
+
+  #if defined(FIVE_BAR)
+  
+      float dhalf = 0.0;
+  
+      float l = Linkage_1;
+      float L = Linkage_2;
+
+      float xd = -dhalf + l * cos(-f_scara[X_AXIS]/SCARA_RAD2DEG);
+      float yd = l * sin(-f_scara[X_AXIS]/SCARA_RAD2DEG);
+
+      float xb = -dhalf + l * cos(-f_scara[Y_AXIS]/SCARA_RAD2DEG);
+      float yb = l * sin(-f_scara[Y_AXIS]/SCARA_RAD2DEG);
+
+      float hx = xb-xd;
+      float hy = yb-yd;
+      float H = sqrt(hx*hx+hy*hy);
+      float LH = L/H;
+      float cosa = (H*H)/(2*L*H);
+      float sina = -sqrt(1-cosa*cosa);
+      float xp = (hx*cosa+hy*sina)*LH+xd;
+      float yp = (-hx*sina+hy*cosa)*LH+yd;
+
+
+      delta[X_AXIS] = xp + SCARA_offset_x;
+      delta[Y_AXIS] = yp + SCARA_offset_y;
+
+  #else
+    float x_sin, x_cos, y_sin, y_cos;
   
     x_sin = sin(f_scara[X_AXIS]/SCARA_RAD2DEG) * Linkage_1;
     x_cos = cos(f_scara[X_AXIS]/SCARA_RAD2DEG) * Linkage_1;
     y_sin = sin(f_scara[Y_AXIS]/SCARA_RAD2DEG) * Linkage_2;
     y_cos = cos(f_scara[Y_AXIS]/SCARA_RAD2DEG) * Linkage_2;
-   
-  //  SERIAL_ECHOPGM(" x_sin="); SERIAL_ECHO(x_sin);
-  //  SERIAL_ECHOPGM(" x_cos="); SERIAL_ECHO(x_cos);
-  //  SERIAL_ECHOPGM(" y_sin="); SERIAL_ECHO(y_sin);
-  //  SERIAL_ECHOPGM(" y_cos="); SERIAL_ECHOLN(y_cos);
+    //  SERIAL_ECHOPGM(" x_sin="); SERIAL_ECHO(x_sin);
+    //  SERIAL_ECHOPGM(" x_cos="); SERIAL_ECHO(x_cos);
+    //  SERIAL_ECHOPGM(" y_sin="); SERIAL_ECHO(y_sin);
+    //  SERIAL_ECHOPGM(" y_cos="); SERIAL_ECHOLN(y_cos);
   
     delta[X_AXIS] = x_cos + y_cos + SCARA_offset_x;  //theta
     delta[Y_AXIS] = x_sin + y_sin + SCARA_offset_y;  //theta+phi
+  #endif
 	
     //SERIAL_ECHOPGM(" delta[X_AXIS]="); SERIAL_ECHO(delta[X_AXIS]);
     //SERIAL_ECHOPGM(" delta[Y_AXIS]="); SERIAL_ECHOLN(delta[Y_AXIS]);
@@ -4260,24 +4287,62 @@ void calculate_delta(float cartesian[3]){
   SCARA_pos[X_AXIS] = cartesian[X_AXIS] * axis_scaling[X_AXIS] - SCARA_offset_x;  //Translate SCARA to standard X Y
   SCARA_pos[Y_AXIS] = cartesian[Y_AXIS] * axis_scaling[Y_AXIS] - SCARA_offset_y;  // With scaling factor.
   
-  #if (Linkage_1 == Linkage_2)
-    SCARA_C2 = ( ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) ) / (2 * (float)L1_2) ) - 1;
+  #if defined(FIVE_BAR)
+  
+    float l2 = L1_2;
+    float L2 = L2_2;
+    float x = SCARA_pos[X_AXIS];
+    float y = SCARA_pos[Y_AXIS];
+    float l = Linkage_1;
+    float L = Linkage_2;
+    
+    float dhalf = 0.0;
+    float A = -2.0 * l * (x - dhalf);
+    float B = -2.0 * y * l;
+    float C = (x - dhalf) * (x - dhalf) + y * y + l2 - L2;
+    float F = (x + dhalf) * (x + dhalf) + y * y + l2 - L2;
+    float E = -2.0  * l * (x+dhalf);
+    float Det1 = B * B - (C * C - A * A);
+    float Det2 = B * B - (F * F - E * E);
+    
+    float qq11 = (-B - sqrt(Det1)) / (C - A);
+    float q11 = 2 * atan(qq11);
+    //float qq12 = (-B + sqrt(Det1)) / (C - A);
+    //float q12 = 2 * atan(qq12);
+    
+    //float qq21 = (-B - sqrt(Det2)) / (F - E);
+    //float q21 = 2 * atan(qq21);
+    float qq22 = (-B + sqrt(Det2)) / (F - E);
+    float q22 = 2 * atan(qq22);
+    
+    q22 = q22 * SCARA_RAD2DEG;
+    q22 = q22 < 0 ? 360+q22 : q22;
+
+    delta[X_AXIS] = -q22;
+    delta[Y_AXIS] = -q11 * SCARA_RAD2DEG;
+    
   #else
-    SCARA_C2 =   ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) - (float)L1_2 - (float)L2_2 ) / 45000; 
+  
+    #if (Linkage_1 == Linkage_2)
+      SCARA_C2 = ( ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) ) / (2 * (float)L1_2) ) - 1;
+    #else
+      SCARA_C2 =   ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) - (float)L1_2 - (float)L2_2 ) / 45000; 
+    #endif
+    
+    SCARA_S2 = sqrt( 1 - sq(SCARA_C2) );
+    
+    SCARA_K1 = Linkage_1 + Linkage_2 * SCARA_C2;
+    SCARA_K2 = Linkage_2 * SCARA_S2;
+    
+    SCARA_theta = ( atan2(SCARA_pos[X_AXIS],SCARA_pos[Y_AXIS])-atan2(SCARA_K1, SCARA_K2) ) * -1;
+    SCARA_psi   =   atan2(SCARA_S2,SCARA_C2);
+    
+    delta[X_AXIS] = SCARA_theta * SCARA_RAD2DEG;  // Multiply by 180/Pi  -  theta is support arm angle
+    delta[Y_AXIS] = (SCARA_theta + SCARA_psi) * SCARA_RAD2DEG;  //       -  equal to sub arm angle (inverted motor)
   #endif
-  
-  SCARA_S2 = sqrt( 1 - sq(SCARA_C2) );
-  
-  SCARA_K1 = Linkage_1 + Linkage_2 * SCARA_C2;
-  SCARA_K2 = Linkage_2 * SCARA_S2;
-  
-  SCARA_theta = ( atan2(SCARA_pos[X_AXIS],SCARA_pos[Y_AXIS])-atan2(SCARA_K1, SCARA_K2) ) * -1;
-  SCARA_psi   =   atan2(SCARA_S2,SCARA_C2);
-  
-  delta[X_AXIS] = SCARA_theta * SCARA_RAD2DEG;  // Multiply by 180/Pi  -  theta is support arm angle
-  delta[Y_AXIS] = (SCARA_theta + SCARA_psi) * SCARA_RAD2DEG;  //       -  equal to sub arm angle (inverted motor)
+
   delta[Z_AXIS] = cartesian[Z_AXIS];
-  
+ 
   /*
   SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
   SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);

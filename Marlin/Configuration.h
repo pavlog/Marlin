@@ -16,6 +16,7 @@
 // You might need Z-Min endstop on SCARA-Printer to use this feature. Actually untested!
 // Uncomment to use Morgan scara mode
 #define SCARA  
+#define FIVE_BAR  // http://cdn.intechopen.com/pdfs-wm/867.pdf for math
 #define scara_segments_per_second 200 //careful, two much will decrease performance...
 // Length of inner support arm
 #define Linkage_1 70 //mm      Preprocessor cannot handle decimal point...
@@ -24,8 +25,8 @@
 
 // SCARA tower offset (position of Tower relative to bed zero position) 
 // This needs to be reasonably accurate as it defines the printbed position in the SCARA space.
-#define SCARA_offset_x 50 //mm   
-#define SCARA_offset_y -30 //mm
+#define SCARA_offset_x 0 //mm   
+#define SCARA_offset_y 0 //mm
 #define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
 
 //some helper variables to make kinematics faster
@@ -60,7 +61,7 @@
 #endif
 
 // Define this to set a custom name for your generic Mendel,
-#define CUSTOM_MENDEL_NAME "Kuzya" // my 17+ years old cat, will die in a next few days due to cancer (
+#define CUSTOM_MENDEL_NAME "Kuzya" // in memories of my 17+ years cat R.I.P.
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
@@ -115,10 +116,10 @@
 // 147 is Pt100 with 4k7 pullup
 // 110 is Pt100 with 1k pullup (non standard)
 
-#define TEMP_SENSOR_0 1
+#define TEMP_SENSOR_0 11
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
-#define TEMP_SENSOR_BED 0
+#define TEMP_SENSOR_BED 11
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
 //#define TEMP_SENSOR_1_AS_REDUNDANT
@@ -383,7 +384,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define X_MAX_POS 50
 #define X_MIN_POS -50
 #define Y_MAX_POS 100
-#define Y_MIN_POS 0
+#define Y_MIN_POS 30
 #define Z_MAX_POS MANUAL_Z_HOME_POS
 #define Z_MIN_POS 0
 
@@ -489,7 +490,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // For deltabots this means top and center of the Cartesian print volume.
 // For sscara: left bottom bed corner SCARA: Offset between HomingPosition and Bed X=0 / Y=0
 #define MANUAL_X_HOME_POS -50.
-#define MANUAL_Y_HOME_POS 0.
+#define MANUAL_Y_HOME_POS 30.
 #define MANUAL_Z_HOME_POS 120  // Distance between nozzle and print surface after homing.
 
 

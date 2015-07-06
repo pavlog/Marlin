@@ -665,6 +665,9 @@ static void _lcd_move(const char *name, int axis, int min, int max) {
     #ifdef DELTA
       calculate_delta(current_position);
       plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS], manual_feedrate[axis]/60, active_extruder);
+    #elif defined(SCARA)
+      calculate_delta(current_position);
+      plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], manual_feedrate[axis]/60, active_extruder);
     #else
       plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], manual_feedrate[axis]/60, active_extruder);
     #endif
@@ -684,10 +687,13 @@ static void lcd_move_e()
         current_position[E_AXIS] += float((int)encoderPosition) * move_menu_scale;
         encoderPosition = 0;
         #ifdef DELTA
-        calculate_delta(current_position);
-        plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS], manual_feedrate[E_AXIS]/60, active_extruder);
+          calculate_delta(current_position);
+          plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS], manual_feedrate[E_AXIS]/60, active_extruder);
+        #elif defined(SCARA)
+          calculate_delta(current_position);
+          plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], manual_feedrate[E_AXIS]/60, active_extruder);
         #else
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], manual_feedrate[E_AXIS]/60, active_extruder);
+          plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], manual_feedrate[E_AXIS]/60, active_extruder);
         #endif
         lcdDrawUpdate = 1;
     }
