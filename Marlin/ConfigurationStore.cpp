@@ -118,6 +118,10 @@ void Config_StoreSettings()
   #endif
   #endif
   
+  EEPROM_WRITE_VAR(i,_base_min_pos);
+  EEPROM_WRITE_VAR(i,_base_max_pos);
+  EEPROM_WRITE_VAR(i,_base_home_pos);
+  
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
@@ -207,7 +211,8 @@ SERIAL_ECHOLNPGM("Scaling factors:");
 	SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
 	SERIAL_ECHOLN("");
 #endif
-#ifdef PIDTEMP
+
+ #ifdef PIDTEMP
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("PID settings:");
     SERIAL_ECHO_START;
@@ -261,6 +266,31 @@ SERIAL_ECHOLNPGM("Scaling factors:");
 		SERIAL_ECHOLN("");
 #endif
 #endif
+
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Min limits (mm):");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M450 X",_base_min_pos[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" ,_base_min_pos[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,_base_min_pos[Z_AXIS] );
+    SERIAL_ECHOLN("");
+
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Max limits (mm):");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M451 X",_base_max_pos[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" ,_base_max_pos[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,_base_max_pos[Z_AXIS] );
+    SERIAL_ECHOLN("");
+
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Home pos (mm):");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M452 X",_base_home_pos[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" ,_base_home_pos[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,_base_home_pos[Z_AXIS] );
+    SERIAL_ECHOLN("");
+
     } else {
         SERIAL_ECHOLNPGM("Filament settings: Disabled");
     }
@@ -351,6 +381,11 @@ void Config_RetrieveSettings()
 		EEPROM_READ_VAR(i, filament_size[2]);
 #endif
 #endif
+
+                EEPROM_READ_VAR(i,_base_min_pos);
+                EEPROM_READ_VAR(i,_base_max_pos);
+                EEPROM_READ_VAR(i,_base_home_pos);
+
 		calculate_volumetric_multipliers();
 		// Call updatePID (similar to when we have processed M301)
 		updatePID();
@@ -452,6 +487,18 @@ void Config_ResetDefault()
 #endif
 #endif
 	calculate_volumetric_multipliers();
+
+        _base_min_pos[X_AXIS] = X_MIN_POS;
+        _base_min_pos[Y_AXIS] = Y_MIN_POS;
+        _base_min_pos[Z_AXIS] = Z_MIN_POS;
+      
+        _base_max_pos[X_AXIS] = X_MAX_POS;
+        _base_max_pos[Y_AXIS] = Y_MAX_POS;
+        _base_max_pos[Z_AXIS] = Z_MAX_POS;
+    
+        _base_home_pos[X_AXIS] = X_HOME_POS;
+        _base_home_pos[Y_AXIS] = Y_HOME_POS;
+        _base_home_pos[Z_AXIS] = Z_HOME_POS;
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");

@@ -187,6 +187,10 @@
 // not ignored for FIVE_BAR
 // M365 - SCARA calibration: Scaling factor, X, Y, Z axis
 //************* SCARA End ***************
+// 
+// M450 - xyz min limits
+// M451 - xyz max limits
+// M452 - xyz home pos
 
 // M928 - Start SD logging (M928 filename.g) - ended by M29
 // M999 - Restart after being stopped by error
@@ -242,6 +246,9 @@ float endstop_adj[3]={0,0,0};
 
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
+float _base_min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
+float _base_max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
+float _base_home_pos[3] = { X_HOME_POS, Y_HOME_POS, Z_HOME_POS };
 bool axis_known_position[3] = {false, false, false};
 float zprobe_zoffset;
 
@@ -871,13 +878,28 @@ static const PROGMEM type array##_P[3] =        \
     { X_##CONFIG, Y_##CONFIG, Z_##CONFIG };     \
 static inline type array(int axis)          \
     { return pgm_read_any(&array##_P[axis]); }
-
-XYZ_CONSTS_FROM_CONFIG(float, base_min_pos,    MIN_POS);
-XYZ_CONSTS_FROM_CONFIG(float, base_max_pos,    MAX_POS);
-XYZ_CONSTS_FROM_CONFIG(float, base_home_pos,   HOME_POS);
+    
+//XYZ_CONSTS_FROM_CONFIG(float, base_min_pos,    MIN_POS);
+//XYZ_CONSTS_FROM_CONFIG(float, base_max_pos,    MAX_POS);
+//XYZ_CONSTS_FROM_CONFIG(float, base_home_pos,   HOME_POS);
 XYZ_CONSTS_FROM_CONFIG(float, max_length,      MAX_LENGTH);
 XYZ_CONSTS_FROM_CONFIG(float, home_retract_mm, HOME_RETRACT_MM);
 XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
+
+inline float base_min_pos(int axis)
+{
+  return _base_min_pos[axis];
+}
+
+inline float base_max_pos(int axis)
+{
+  return _base_max_pos[axis];
+}
+
+inline float base_home_pos(int axis)
+{
+  return _base_home_pos[axis];
+}
 
 #ifdef DUAL_X_CARRIAGE
   #if EXTRUDERS == 1 || defined(COREXY) \
@@ -3805,6 +3827,28 @@ case 404:  //M404 Enter the nominal filament width (3mm, 1.75mm ) N<3.0> or disp
       #endif
     }
     break;
+    
+    case 450: // M451 xyz min limits
+      for(int8_t i=0; i < 3; i++)
+      {
+        if(code_seen(axis_codes[i])) _base_min_pos[i] = code_value();
+      }
+      break;
+
+    case 451: // M451 xyz max limits
+      for(int8_t i=0; i < 3; i++)
+      {
+        if(code_seen(axis_codes[i])) _base_max_pos[i] = code_value();
+      }
+      break;
+    
+    case 452: // M452 xyz home pos
+      for(int8_t i=0; i < 3; i++)
+      {
+        if(code_seen(axis_codes[i])) _base_home_pos[i] = code_value();
+      }
+      break;
+    
     case 999: // M999: Restart after being stopped
       Stopped = false;
       lcd_reset_alert_level();

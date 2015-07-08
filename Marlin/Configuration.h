@@ -496,10 +496,10 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
-#define HOMING_FEEDRATE {10*60, 10*60, 10*60, 0}  // set the homing speeds (mm/min)
+#define HOMING_FEEDRATE {10*60, 10*60, 15*60, 0}  // set the homing speeds (mm/min)
 
 // default settings
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {100,100,200,300}  // default steps per unit for SCARA
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {92,92,200,300}  // default steps per unit for SCARA
 #define DEFAULT_MAX_FEEDRATE          {30, 30, 30, 70}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {300,300,20,1000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
