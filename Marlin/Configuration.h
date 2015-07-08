@@ -383,8 +383,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // Travel limits after homing
 #define X_MAX_POS 50
 #define X_MIN_POS -50
-#define Y_MAX_POS 100
-#define Y_MIN_POS 30
+#define Y_MAX_POS 130
+#define Y_MIN_POS 35
 #define Z_MAX_POS MANUAL_Z_HOME_POS
 #define Z_MIN_POS 0
 
@@ -490,8 +490,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // For deltabots this means top and center of the Cartesian print volume.
 // For sscara: left bottom bed corner SCARA: Offset between HomingPosition and Bed X=0 / Y=0
 #define MANUAL_X_HOME_POS -50.
-#define MANUAL_Y_HOME_POS 30.
-#define MANUAL_Z_HOME_POS 120  // Distance between nozzle and print surface after homing.
+#define MANUAL_Y_HOME_POS 35.
+#define MANUAL_Z_HOME_POS 130  // Distance between nozzle and print surface after homing.
 
 
 //// MOVEMENT SETTINGS
