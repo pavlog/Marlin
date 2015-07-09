@@ -266,7 +266,10 @@ SERIAL_ECHOLNPGM("Scaling factors:");
 		SERIAL_ECHOLN("");
 #endif
 #endif
-
+    } else {
+        SERIAL_ECHOLNPGM("Filament settings: Disabled");
+    }
+#endif
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Min limits (mm):");
     SERIAL_ECHO_START;
@@ -290,11 +293,6 @@ SERIAL_ECHOLNPGM("Scaling factors:");
     SERIAL_ECHOPAIR(" Y" ,_base_home_pos[Y_AXIS] );
     SERIAL_ECHOPAIR(" Z" ,_base_home_pos[Z_AXIS] );
     SERIAL_ECHOLN("");
-
-    } else {
-        SERIAL_ECHOLNPGM("Filament settings: Disabled");
-    }
-#endif
 }
 #endif
 
