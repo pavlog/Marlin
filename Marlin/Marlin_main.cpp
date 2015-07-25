@@ -333,6 +333,10 @@ int EtoPPressure=0;
 float axis_scaling[3]={1,1,1};  // Build size scaling, default to 1
 #endif				
 
+ #if defined(FIVE_BAR)
+ #define FBSIGN -1
+ #endif
+
 bool cancel_heatup = false ;
 
 #ifdef FILAMENT_SENSOR
@@ -966,39 +970,34 @@ static void axis_is_at_home(int axis) {
    if (axis < 2)
    {
 
-		 #if defined(FIVE_BAR)
-     for (i=0; i<3; i++)
-     {
-        homeposition[i] = base_home_pos(i)+add_homing[i]; 
-     }  
-			// SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
-   		//  SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
-   		// Works out real Homeposition angles using inverse kinematics, 
-   		// and calculates homing offset using forward kinematics
-     calculate_delta(homeposition);
-     
-    // SERIAL_ECHOPGM("base q1= "); SERIAL_ECHO(delta[X_AXIS]);
-    // SERIAL_ECHOPGM(" base q2="); SERIAL_ECHOLN(delta[Y_AXIS]);
-		 #else   
      for (i=0; i<3; i++)
      {
         homeposition[i] = base_home_pos(i); 
      }  
-	// SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
-   //  SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
-   // Works out real Homeposition angles using inverse kinematics, 
-   // and calculates homing offset using forward kinematics
+     //SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
+     //SERIAL_ECHOPGM(" homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
+      // Works out real Homeposition angles using inverse kinematics, 
+      // and calculates homing offset using forward kinematics
      calculate_delta(homeposition);
+
+		 #if defined(FIVE_BAR)
+       for (i=0; i<2; i++)
+       {
+          delta[i] -= FBSIGN*add_homing[i];
+       } 
+  
+       //SERIAL_ECHOPGM("base q1= "); SERIAL_ECHO(FBSIGN*delta[X_AXIS]);
+       //SERIAL_ECHOPGM(" base q2="); SERIAL_ECHOLN(FBSIGN*delta[Y_AXIS]);
+		 #else   
      
-    // SERIAL_ECHOPGM("base Theta= "); SERIAL_ECHO(delta[X_AXIS]);
-    // SERIAL_ECHOPGM(" base Psi+Theta="); SERIAL_ECHOLN(delta[Y_AXIS]);
+      // SERIAL_ECHOPGM("base Theta= "); SERIAL_ECHO(delta[X_AXIS]);
+      // SERIAL_ECHOPGM(" base Psi+Theta="); SERIAL_ECHOLN(delta[Y_AXIS]);
      
-     for (i=0; i<2; i++)
-     {
-        delta[i] -= add_homing[i];
-     } 
-     
-			#endif
+       for (i=0; i<2; i++)
+       {
+          delta[i] -= add_homing[i];
+       } 
+     #endif
     // SERIAL_ECHOPGM("addhome X="); SERIAL_ECHO(add_homing[X_AXIS]);
 	// SERIAL_ECHOPGM(" addhome Y="); SERIAL_ECHO(add_homing[Y_AXIS]);
     // SERIAL_ECHOPGM(" addhome Theta="); SERIAL_ECHO(delta[X_AXIS]);
@@ -1006,8 +1005,8 @@ static void axis_is_at_home(int axis) {
       
      calculate_SCARA_forward_Transform(delta);
      
-    // SERIAL_ECHOPGM("Delta X="); SERIAL_ECHO(delta[X_AXIS]);
-    // SERIAL_ECHOPGM(" Delta Y="); SERIAL_ECHOLN(delta[Y_AXIS]);
+    //SERIAL_ECHOPGM("Delta X="); SERIAL_ECHO(delta[X_AXIS]);
+    //SERIAL_ECHOPGM(" Delta Y="); SERIAL_ECHOLN(delta[Y_AXIS]);
      
     current_position[axis] = delta[axis];
     
@@ -2799,25 +2798,34 @@ Sigma_Exit:
       SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
 
       SERIAL_PROTOCOLLN("");
-#ifdef SCARA && !defined(FIVE_BAR)
-	  SERIAL_PROTOCOLPGM("SCARA Theta:");
-      SERIAL_PROTOCOL(delta[X_AXIS]);
-      SERIAL_PROTOCOLPGM("   Psi+Theta:");
-      SERIAL_PROTOCOL(delta[Y_AXIS]);
-      SERIAL_PROTOCOLLN("");
-      
-      SERIAL_PROTOCOLPGM("SCARA Cal - Theta:");
-      SERIAL_PROTOCOL(delta[X_AXIS]+add_homing[X_AXIS]);
-      SERIAL_PROTOCOLPGM("   Psi+Theta (90):");
-      SERIAL_PROTOCOL(delta[Y_AXIS]-delta[X_AXIS]-90+add_homing[Y_AXIS]);
-      SERIAL_PROTOCOLLN("");
-      
-      SERIAL_PROTOCOLPGM("SCARA step Cal - Theta:");
-      SERIAL_PROTOCOL(delta[X_AXIS]/90*axis_steps_per_unit[X_AXIS]);
-      SERIAL_PROTOCOLPGM("   Psi+Theta:");
-      SERIAL_PROTOCOL((delta[Y_AXIS]-delta[X_AXIS])/90*axis_steps_per_unit[Y_AXIS]);
-      SERIAL_PROTOCOLLN("");
-      SERIAL_PROTOCOLLN("");
+#ifdef SCARA
+      #if defined(FIVE_BAR)
+        SERIAL_PROTOCOLPGM("SCARA q1:");
+        SERIAL_PROTOCOL(FBSIGN*delta[X_AXIS]);
+        SERIAL_PROTOCOLPGM("   q2:");
+        SERIAL_PROTOCOL(FBSIGN*delta[Y_AXIS]);
+        SERIAL_PROTOCOLLN("");
+        SERIAL_PROTOCOLLN("");
+      #else
+  	    SERIAL_PROTOCOLPGM("SCARA Theta:");
+        SERIAL_PROTOCOL(delta[X_AXIS]);
+        SERIAL_PROTOCOLPGM("   Psi+Theta:");
+        SERIAL_PROTOCOL(delta[Y_AXIS]);
+        SERIAL_PROTOCOLLN("");
+        
+        SERIAL_PROTOCOLPGM("SCARA Cal - Theta:");
+        SERIAL_PROTOCOL(delta[X_AXIS]+add_homing[X_AXIS]);
+        SERIAL_PROTOCOLPGM("   Psi+Theta (90):");
+        SERIAL_PROTOCOL(delta[Y_AXIS]-delta[X_AXIS]-90+add_homing[Y_AXIS]);
+        SERIAL_PROTOCOLLN("");
+        
+        SERIAL_PROTOCOLPGM("SCARA step Cal - Theta:");
+        SERIAL_PROTOCOL(delta[X_AXIS]/90*axis_steps_per_unit[X_AXIS]);
+        SERIAL_PROTOCOLPGM("   Psi+Theta:");
+        SERIAL_PROTOCOL((delta[Y_AXIS]-delta[X_AXIS])/90*axis_steps_per_unit[Y_AXIS]);
+        SERIAL_PROTOCOLLN("");
+        SERIAL_PROTOCOLLN("");
+      #endif
 #endif
       break;
     case 120: // M120
@@ -2953,7 +2961,7 @@ Sigma_Exit:
       {
         if(code_seen(axis_codes[i])) add_homing[i] = code_value();
       }
-	  #ifdef SCARA && !defined(FIVE_BAR)
+	  #ifdef SCARA
 	   if(code_seen('T'))       // Theta
       {
         add_homing[X_AXIS] = code_value() ;
@@ -3429,6 +3437,31 @@ Sigma_Exit:
         //ClearToSend();
         return;
       }
+    break;
+  #else
+    case 370: // M370 - five bar q1 and q2 
+    {
+      //                 \     /
+      //                  \  /
+      //                  q2(y) q1(x)
+      if (code_seen('X'))
+      {
+        delta[X_AXIS] = FBSIGN*code_value();
+      }
+      if (code_seen('Y'))
+      {
+        delta[Y_AXIS] = FBSIGN*code_value();
+      }
+      calculate_SCARA_forward_Transform(delta);
+      destination[X_AXIS] = delta[X_AXIS]/axis_scaling[X_AXIS];
+      destination[Y_AXIS] = delta[Y_AXIS]/axis_scaling[Y_AXIS]; 
+
+      SERIAL_ECHOPAIR("X:",destination[X_AXIS]);
+      SERIAL_ECHOPAIR(" Y:",destination[Y_AXIS]);
+      SERIAL_ECHOLN("");
+
+      prepare_move();
+    }
     break;
 	#endif
     case 365: // M364  Set SCARA scaling for X Y Z
@@ -4283,9 +4316,6 @@ void controllerFan()
   }
 }
 #endif
- #if defined(FIVE_BAR)
- #define FBSIGN -1
- #endif
 
 #ifdef SCARA
 void calculate_SCARA_forward_Transform(float f_scara[3])
