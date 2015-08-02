@@ -23,6 +23,20 @@
 // Length of outer support arm     Measure arm lengths precisely and enter 
 #define Linkage_2 80 //mm    
 
+
+
+//  top view
+//     /\
+//    /  \ Linkage_2 (1)
+//   /    \  
+//  /      \ a
+// 0        0 ---[  - this is offset, and angle between arm Linkage_2(1) and end effector mount
+//  \       / 
+//   \     /   
+//    \   /  Linkage_2 (2)
+//     \ /
+//      
+// see details http://3dgems.blogspot.com/2015/07/scara-arms-redesigned-to-match-e3d-v5.html
 #define EndPointMountOffset 18
 #define EndPointMountAngle 50
 
@@ -370,8 +384,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 #define INVERT_X_DIR false    // for Mendel set to false, for Orca set to true
 #define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
-#define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#define INVERT_Z_DIR false     // for Mendel set to false, for Orca set to true
+#define INVERT_E0_DIR true   // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 
