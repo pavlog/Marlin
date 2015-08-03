@@ -16,12 +16,29 @@
 // You might need Z-Min endstop on SCARA-Printer to use this feature. Actually untested!
 // Uncomment to use Morgan scara mode
 #define SCARA  
-#define FIVE_BAR  // http://cdn.intechopen.com/pdfs-wm/867.pdf for math
-#define scara_segments_per_second 200 //careful, two much will decrease performance...
+#define FIVE_BAR  // http://cdn.intechopen.com/pdfs-wm/867.pdf for math but extended by mount
+#define scara_segments_per_second 100 //careful, two much will decrease performance...
 // Length of inner support arm
 #define Linkage_1 70 //mm      Preprocessor cannot handle decimal point...
 // Length of outer support arm     Measure arm lengths precisely and enter 
 #define Linkage_2 80 //mm    
+
+
+
+//  top view
+//     /\
+//    /  \ Linkage_2 (1)
+//   /    \  
+//  /      \ 
+// 0        0 ---[  - this is offset, and angle between arm Linkage_2(1) and end effector mount
+//  \       / 
+//   \     /   
+//    \   /  Linkage_2 (2)
+//     \ /
+//      
+// see details http://3dgems.blogspot.com/2015/07/scara-arms-redesigned-to-match-e3d-v5.html
+#define EndPointMountOffset 18
+#define EndPointMountAngle 50
 
 // SCARA tower offset (position of Tower relative to bed zero position) 
 // This needs to be reasonably accurate as it defines the printbed position in the SCARA space.
@@ -32,6 +49,7 @@
 //some helper variables to make kinematics faster
 #define L1_2 sq(Linkage_1) // do not change
 #define L2_2 sq(Linkage_2) // do not change
+#define EndPointMountAngleRad (EndPointMountAngle/SCARA_RAD2DEG)
 
 //===========================================================================
 //========================= SCARA Settings end ==================================
@@ -366,8 +384,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 #define INVERT_X_DIR false    // for Mendel set to false, for Orca set to true
 #define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
-#define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#define INVERT_Z_DIR false     // for Mendel set to false, for Orca set to true
+#define INVERT_E0_DIR true   // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 
@@ -499,7 +517,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define HOMING_FEEDRATE {10*60, 10*60, 15*60, 0}  // set the homing speeds (mm/min)
 
 // default settings
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {92,92,200,300}  // default steps per unit for SCARA
+// Theory for xy(unit is a degree): stepperUnitsPerRevolution*driverMicrostepping*gearboxration/360, sscara (with drv8825 1/32) = 200*32*5/360 = 88.888
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {88.888,88.888,200,300}  // default steps per unit for SCARA
 #define DEFAULT_MAX_FEEDRATE          {30, 30, 30, 70}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {300,300,20,1000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
@@ -546,7 +565,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define PLA_PREHEAT_HPB_TEMP 70
 #define PLA_PREHEAT_FAN_SPEED 255   // Insert Value between 0 and 255
 
-#define ABS_PREHEAT_HOTEND_TEMP 240
+#define ABS_PREHEAT_HOTEND_TEMP 230
 #define ABS_PREHEAT_HPB_TEMP 100
 #define ABS_PREHEAT_FAN_SPEED 255   // Insert Value between 0 and 255
 
