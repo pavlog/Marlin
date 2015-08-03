@@ -4386,11 +4386,11 @@ void calculate_delta(float cartesian[3]){
     
   #else
   
-    #if (Linkage_1 == Linkage_2)
-      SCARA_C2 = ( ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) ) / (2 * (float)L1_2) ) - 1;
-    #else
-      SCARA_C2 =   ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) - (float)L1_2 - (float)L2_2 ) / 45000; 
-    #endif
+	#if (Linkage_1 == Linkage_2)
+		SCARA_C2 = ( ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) ) / (2 * (float)L1_2) );
+	#else
+		SCARA_C2 =   ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) - (float)L1_2 - (float)L2_2 ) / (2*Linkage_1*Linkage_2);
+	#endif
     
     SCARA_S2 = sqrt( 1 - sq(SCARA_C2) );
     
