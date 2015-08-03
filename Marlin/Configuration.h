@@ -29,7 +29,7 @@
 //     /\
 //    /  \ Linkage_2 (1)
 //   /    \  
-//  /      \ a
+//  /      \ 
 // 0        0 ---[  - this is offset, and angle between arm Linkage_2(1) and end effector mount
 //  \       / 
 //   \     /   
