@@ -22,7 +22,8 @@
 #define Linkage_1 70 //mm      Preprocessor cannot handle decimal point...
 // Length of outer support arm     Measure arm lengths precisely and enter 
 #define Linkage_2 80 //mm    
-
+// 
+#define FiveBarAxesDist 0
 
 
 //  top view
@@ -50,6 +51,7 @@
 #define L1_2 sq(Linkage_1) // do not change
 #define L2_2 sq(Linkage_2) // do not change
 #define EndPointMountAngleRad (EndPointMountAngle/SCARA_RAD2DEG)
+#define dhalf (FiveBarAxesDist/2.0)
 
 //===========================================================================
 //========================= SCARA Settings end ==================================

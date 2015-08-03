@@ -4328,7 +4328,7 @@ void calculate_SCARA_forward_Transform(float f_scara[3])
 	
 #if defined(FIVE_BAR)
 	
-	float dhalf = 0.0;
+	
 	
 	float l = Linkage_1;
 	float L = Linkage_2;
@@ -4336,7 +4336,7 @@ void calculate_SCARA_forward_Transform(float f_scara[3])
 	float xd = -dhalf + l * cos(FBSIGN*f_scara[Y_AXIS]/SCARA_RAD2DEG);
 	float yd = l * sin(FBSIGN*f_scara[Y_AXIS]/SCARA_RAD2DEG);
 	
-	float xb = -dhalf + l * cos(FBSIGN*f_scara[X_AXIS]/SCARA_RAD2DEG);
+	float xb = dhalf + l * cos(FBSIGN*f_scara[X_AXIS]/SCARA_RAD2DEG);
 	float yb = l * sin(FBSIGN*f_scara[X_AXIS]/SCARA_RAD2DEG);
 	
 	float hx = xb-xd;
@@ -4391,8 +4391,6 @@ void calculate_delta(float cartesian[3]){
 	SCARA_pos[Y_AXIS] = cartesian[Y_AXIS] * axis_scaling[Y_AXIS] - SCARA_offset_y;  // With scaling factor.
 	
 #if defined(FIVE_BAR)
-	
-	float dhalf = 0.0;
 	
 	float l2 = L1_2;
 	float L2 = L2_2;
