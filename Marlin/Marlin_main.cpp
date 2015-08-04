@@ -333,10 +333,6 @@ int EtoPPressure=0;
 float axis_scaling[3]={1,1,1};  // Build size scaling, default to 1
 #endif				
 
- #if defined(FIVE_BAR)
- #define FBSIGN -1
- #endif
-
 bool cancel_heatup = false ;
 
 #ifdef FILAMENT_SENSOR
