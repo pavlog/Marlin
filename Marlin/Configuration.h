@@ -16,7 +16,7 @@
 // You might need Z-Min endstop on SCARA-Printer to use this feature. Actually untested!
 // Uncomment to use Morgan scara mode
 #define SCARA  
-#define FIVE_BAR  // http://cdn.intechopen.com/pdfs-wm/867.pdf for math but extended by mount
+#define FIVE_BAR  // http://cdn.intechopen.com/pdfs-wm/867.pdf for math but extended by end effector mount
 #define FBSIGN -1
 #define scara_segments_per_second 100 //careful, two much will decrease performance...
 // Length of inner support arm

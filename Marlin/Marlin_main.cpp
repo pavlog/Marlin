@@ -354,7 +354,7 @@ const char echomagic[] PROGMEM = "echo:";
 //=============================Private Variables=============================
 //===========================================================================
 const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
-static float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
+float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
 
 #ifndef DELTA
 float delta[3] = {0.0, 0.0, 0.0};
@@ -1419,7 +1419,6 @@ void process_commands()
         //ClearToSend();
       }
       break;
-#ifndef SCARA //disable arc support
     case 2: // G2  - CW ARC
       if(Stopped == false) {
         get_arc_coordinates();
@@ -1432,7 +1431,6 @@ void process_commands()
         prepare_arc_move(false);
       }
       break;
-#endif
     case 4: // G4 dwell
       LCD_MESSAGEPGM(MSG_DWELL);
       codenum = 0;

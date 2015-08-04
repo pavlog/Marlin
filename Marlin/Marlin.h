@@ -225,9 +225,11 @@ extern float delta_radius;
 extern float delta_diagonal_rod;
 extern float delta_segments_per_second;
 void recalc_delta_settings(float radius, float diagonal_rod);
+extern float destination[NUM_AXIS];
 #endif
 #ifdef SCARA
 extern float axis_scaling[3];  // Build size scaling
+extern float destination[NUM_AXIS];
 #endif
 extern float min_pos[3];
 extern float max_pos[3];
