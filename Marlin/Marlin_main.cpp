@@ -187,6 +187,10 @@
 // not ignored for FIVE_BAR
 // M365 - SCARA calibration: Scaling factor, X, Y, Z axis
 //************* SCARA End ***************
+// M370 - five bar q1 and q2 
+//                 \     /
+//                  \  /
+//                  q2(y) q1(x)
 // 
 // M450 - xyz min limits
 // M451 - xyz max limits
