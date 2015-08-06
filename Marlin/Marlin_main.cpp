@@ -3434,28 +3434,29 @@ Sigma_Exit:
     break;
   #else
     case 370: // M370 - five bar q1 and q2 
-    {
-      //                 \     /
-      //                  \  /
-      //                  q2(y) q1(x)
-      if (code_seen('X'))
-      {
-        delta[X_AXIS] = FBSIGN*code_value();
-      }
-      if (code_seen('Y'))
-      {
-        delta[Y_AXIS] = FBSIGN*code_value();
-      }
-      calculate_SCARA_forward_Transform(delta);
-      destination[X_AXIS] = delta[X_AXIS]/axis_scaling[X_AXIS];
-      destination[Y_AXIS] = delta[Y_AXIS]/axis_scaling[Y_AXIS]; 
-
-      SERIAL_ECHOPAIR("X:",destination[X_AXIS]);
-      SERIAL_ECHOPAIR(" Y:",destination[Y_AXIS]);
-      SERIAL_ECHOLN("");
-
-      prepare_move();
-    }
+    	if(Stopped == false) 
+			{
+		    //                 \     /
+		    //                  \  /
+		    //                  q2(y) q1(x)
+		    if (code_seen('X'))
+		    {
+		      delta[X_AXIS] = FBSIGN*code_value();
+		    }
+		    if (code_seen('Y'))
+		    {
+		      delta[Y_AXIS] = FBSIGN*code_value();
+		    }
+		    calculate_SCARA_forward_Transform(delta);
+		    destination[X_AXIS] = delta[X_AXIS]/axis_scaling[X_AXIS];
+		    destination[Y_AXIS] = delta[Y_AXIS]/axis_scaling[Y_AXIS]; 
+			
+		    SERIAL_ECHOPAIR("X:",destination[X_AXIS]);
+		    SERIAL_ECHOPAIR(" Y:",destination[Y_AXIS]);
+		    SERIAL_ECHOLN("");
+		
+		  	prepare_move();
+		  }
     break;
 	#endif
     case 365: // M364  Set SCARA scaling for X Y Z
