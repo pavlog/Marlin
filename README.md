@@ -5,6 +5,7 @@
 
 ##Fork changes:
  - FIVE_BAR define added (works together with SCARA define)
+ - Extra arm added to mount end effector (EndPointMountOffset and EndPointMountAngle defines)
  - added M450 - xyz min limits
  - added M451 - xyz max limits
  - added M452 - xyz home pos
