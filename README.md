@@ -3,7 +3,7 @@
 
  Documentation has moved to [marlinfirmware.org](http://www.marlinfirmware.org).
 
-Fork changes:
+##Fork changes:
  - FIVE_BAR define added (works together with SCARA define)
  - added M450 - xyz min limits
  - added M451 - xyz max limits
