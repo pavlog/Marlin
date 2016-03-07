@@ -16,6 +16,39 @@
 // You might need Z-Min endstop on SCARA-Printer to use this feature. Actually untested!
 // Uncomment to use Morgan scara mode
 #define SCARA  
+#define SCARA_TYPE 2
+// 0 - QHARLEYS scara code path
+//
+//
+// 1 - Pavlog SCARA(WIP)
+//
+//                   |
+//   Linkage_2       |
+//                   |__   
+//                  /  /
+//                 /  /
+//   Linkage_1    /  /
+//               /  /
+//          ----*--/---
+//
+//
+// 2 - (or define FIVE_BAR)
+//    
+//            *
+//           /   EndPointMountOffset and EndPointMountAngle 
+//          /
+//         / \
+//        /   \
+//       /     \  Linkage_2
+//      /       \
+//     /         \
+//    /           \
+//    \           /
+//     \         / Linkage_1
+//      \       /
+//       *--d--*
+
+
 #define FIVE_BAR  // http://cdn.intechopen.com/pdfs-wm/867.pdf for math but extended by end effector mount
 #define FBSIGN -1
 #define scara_segments_per_second 100 //careful, two much will decrease performance...
@@ -26,18 +59,7 @@
 // 
 #define FiveBarAxesDist 0
 
-
-//  top view
-//     /\
-//    /  \ Linkage_2 (1)
-//   /    \  
-//  /      \ 
-// 0        0 ---[  - this is offset, and angle between arm Linkage_2(1) and end effector mount
-//  \       / 
-//   \     /   
-//    \   /  Linkage_2 (2)
-//     \ /
-//      
+// for FIVE_BAR or SCARA_TYPE 2 only
 // see details http://3dgems.blogspot.com/2015/07/scara-arms-redesigned-to-match-e3d-v5.html
 #define EndPointMountOffset 18
 #define EndPointMountAngle 50
@@ -48,11 +70,6 @@
 #define SCARA_offset_y 0 //mm
 #define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
 
-//some helper variables to make kinematics faster
-#define L1_2 sq(Linkage_1) // do not change
-#define L2_2 sq(Linkage_2) // do not change
-#define EndPointMountAngleRad (EndPointMountAngle/SCARA_RAD2DEG)
-#define dhalf (FiveBarAxesDist/2.0)
 
 //===========================================================================
 //========================= SCARA Settings end ==================================
@@ -347,7 +364,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 //#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
 
-// sscara
+// sscara moving bed
 //                         Nozle
 //                          \/
 //
@@ -396,7 +413,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // Sets direction of endstop	s when homing; 1=MAX, -1=MIN
 #define X_HOME_DIR -1
 #define Y_HOME_DIR -1
-#define Z_HOME_DIR 1
+#define Z_HOME_DIR -1
 
 #define min_software_endstops true // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below.
@@ -406,7 +423,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define X_MIN_POS -50
 #define Y_MAX_POS 130
 #define Y_MIN_POS 35
-#define Z_MAX_POS MANUAL_Z_HOME_POS
+#define Z_MAX_POS 130
 #define Z_MIN_POS 0
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
@@ -512,7 +529,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // For sscara: left bottom bed corner SCARA: Offset between HomingPosition and Bed X=0 / Y=0
 #define MANUAL_X_HOME_POS -50.
 #define MANUAL_Y_HOME_POS 35.
-#define MANUAL_Z_HOME_POS 130  // Distance between nozzle and print surface after homing.
+#define MANUAL_Z_HOME_POS 0  // Distance between nozzle and print surface after homing.
 
 
 //// MOVEMENT SETTINGS
@@ -832,3 +849,4 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #include "thermistortables.h"
 
 #endif //__CONFIGURATION_H
+

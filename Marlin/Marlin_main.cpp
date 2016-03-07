@@ -187,7 +187,7 @@
 // not ignored for FIVE_BAR
 // M365 - SCARA calibration: Scaling factor, X, Y, Z axis
 //************* SCARA End ***************
-// M370 - five bar q1 and q2 
+// M370 - five bar q1 and q2 or just angles for other types
 //                 \     /
 //                  \  /
 //                  q2(y) q1(x)
@@ -195,6 +195,8 @@
 // M450 - xyz min limits
 // M451 - xyz max limits
 // M452 - xyz home pos
+// M453 - X#Linkage1 YLinkage2 O#EndPointMountOffset A#EndPointMountAnglr D#AxisDistances
+// M454 - xyz home dir
 
 // M928 - Start SD logging (M928 filename.g) - ended by M29
 // M999 - Restart after being stopped by error
@@ -253,7 +255,11 @@ float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 float _base_min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float _base_max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 float _base_home_pos[3] = { X_HOME_POS, Y_HOME_POS, Z_HOME_POS };
+float _home_dir[3] = { X_HOME_DIR, Y_HOME_DIR, Z_HOME_DIR };
+
 bool axis_known_position[3] = {false, false, false};
+// 
+
 float zprobe_zoffset;
 
 // Extruder offset
@@ -335,6 +341,16 @@ int EtoPPressure=0;
 
 #ifdef SCARA                              // Build size scaling
 float axis_scaling[3]={1,1,1};  // Build size scaling, default to 1
+#define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
+float _Linkage_1 = Linkage_1;
+float _Linkage_2 = Linkage_2;
+float _EndPointMountOffset = EndPointMountOffset;
+float _EndPointMountAngleRad = EndPointMountAngle/SCARA_RAD2DEG;
+float _FiveBarAxesDist = FiveBarAxesDist;
+//some helper variables to make kinematics faster
+float L1_2 = sq(Linkage_1);
+float L2_2 = sq(Linkage_2);
+
 #endif				
 
 bool cancel_heatup = false ;
@@ -888,7 +904,7 @@ static inline type array(int axis)          \
 //XYZ_CONSTS_FROM_CONFIG(float, base_home_pos,   HOME_POS);
 XYZ_CONSTS_FROM_CONFIG(float, max_length,      MAX_LENGTH);
 XYZ_CONSTS_FROM_CONFIG(float, home_retract_mm, HOME_RETRACT_MM);
-XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
+//XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
 
 inline float base_min_pos(int axis)
 {
@@ -903,6 +919,11 @@ inline float base_max_pos(int axis)
 inline float base_home_pos(int axis)
 {
   return _base_home_pos[axis];
+}
+
+inline float home_dir(int axis)
+{
+  return _home_dir[axis];
 }
 
 #ifdef DUAL_X_CARRIAGE
@@ -933,7 +954,7 @@ static float x_home_pos(int extruder) {
 }
 
 static int x_home_dir(int extruder) {
-  return (extruder == 0) ? X_HOME_DIR : X2_HOME_DIR;
+  return (extruder == 0) ? _home_dir[X_AXIS] : X2_HOME_DIR;
 }
 
 static float inactive_extruder_x_pos = X2_MAX_POS; // used in mode 0 & 1
@@ -980,7 +1001,7 @@ static void axis_is_at_home(int axis) {
       // and calculates homing offset using forward kinematics
      calculate_delta(homeposition);
 
-		 #if defined(FIVE_BAR)
+		 #if defined(FIVE_BAR) || (SCARA_TYPE==2)
        for (i=0; i<2; i++)
        {
           delta[i] -= FBSIGN*add_homing[i];
@@ -1217,7 +1238,7 @@ static float probe_pt(float x, float y, float z_before) {
 
 static void homeaxis(int axis) {
 #define HOMEAXIS_DO(LETTER) \
-  ((LETTER##_MIN_PIN > -1 && LETTER##_HOME_DIR==-1) || (LETTER##_MAX_PIN > -1 && LETTER##_HOME_DIR==1))
+  ((LETTER##_MIN_PIN > -1 && _home_dir[LETTER##_AXIS]==-1) || (LETTER##_MAX_PIN > -1 && _home_dir[LETTER##_AXIS]==1))
 
   if (axis==X_AXIS ? HOMEAXIS_DO(X) :
       axis==Y_AXIS ? HOMEAXIS_DO(Y) :
@@ -1248,6 +1269,14 @@ static void homeaxis(int axis) {
     #endif
 #endif // Z_PROBE_SLED
     destination[axis] = 1.5 * max_length(axis) * axis_home_dir;
+    // debugging
+    //SERIAL_PROTOCOLPGM("Home dest");
+    //SERIAL_PROTOCOL(destination[axis]);
+    //SERIAL_PROTOCOLPGM("Home len");
+    //SERIAL_PROTOCOL(Z_MAX_LENGTH);
+    //SERIAL_PROTOCOLPGM("Home dir");
+    //SERIAL_PROTOCOL(axis_home_dir);
+
     feedrate = homing_feedrate[axis];
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
@@ -1518,11 +1547,12 @@ void process_commands()
 
       home_all_axis = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS])));
 
-      #if Z_HOME_DIR > 0                      // If homing away from BED do Z first
-      if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
-        HOMEAXIS(Z);
+      if( _home_dir[Z_AXIS] > 0 )                     // If homing away from BED do Z first
+      {
+        if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
+          HOMEAXIS(Z);
+        }
       }
-      #endif
 
       #ifdef QUICK_HOME
       if((home_all_axis)||( code_seen(axis_codes[X_AXIS]) && code_seen(axis_codes[Y_AXIS])) )  //first diagonal move
@@ -1593,7 +1623,7 @@ void process_commands()
       if(code_seen(axis_codes[X_AXIS]))
       {
         if(code_value_long() != 0) {
-		#ifdef SCARA && !defined(FIVE_BAR)
+		#ifdef SCARA && !(defined(FIVE_BAR) || (SCARA_TYPE==2))
 		   current_position[X_AXIS]=code_value();
 		#else
 		   current_position[X_AXIS]=code_value()+add_homing[X_AXIS];
@@ -1603,7 +1633,7 @@ void process_commands()
 
       if(code_seen(axis_codes[Y_AXIS])) {
         if(code_value_long() != 0) {
-		#ifdef SCARA && !defined(FIVE_BAR)
+		#ifdef SCARA && !(defined(FIVE_BAR) || (SCARA_TYPE==2))
 			current_position[Y_AXIS]=code_value();
 		#else
 		   current_position[Y_AXIS]=code_value()+add_homing[Y_AXIS];
@@ -1611,7 +1641,8 @@ void process_commands()
         }
       }
 
-      #if Z_HOME_DIR < 0                      // If homing towards BED do Z last
+      if (_home_dir[Z_AXIS] < 0 )                      // If homing towards BED do Z last
+      {
         #ifndef Z_SAFE_HOMING
           if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
             #if defined (Z_RAISE_BEFORE_HOMING) && (Z_RAISE_BEFORE_HOMING > 0)
@@ -1665,9 +1696,7 @@ void process_commands()
             }
           }
         #endif
-      #endif
-
-
+      }
 
       if(code_seen(axis_codes[Z_AXIS])) {
         if(code_value_long() != 0) {
@@ -1895,7 +1924,7 @@ void process_commands()
              plan_set_e_position(current_position[E_AXIS]);
            }
            else {
-#ifdef SCARA && !defined(FIVE_BAR)
+#ifdef SCARA && !(defined(FIVE_BAR) || (SCARA_TYPE==2))
 		if (i == X_AXIS || i == Y_AXIS) {
                 	current_position[i] = code_value();  
 		}
@@ -2797,7 +2826,7 @@ Sigma_Exit:
 
       SERIAL_PROTOCOLLN("");
 #ifdef SCARA
-      #if defined(FIVE_BAR)
+      #if defined(FIVE_BAR) || (SCARA_TYPE==2)
         SERIAL_PROTOCOLPGM("SCARA q1:");
         SERIAL_PROTOCOL(FBSIGN*delta[X_AXIS]);
         SERIAL_PROTOCOLPGM("   q2:");
@@ -3349,7 +3378,7 @@ Sigma_Exit:
     }
     break;
 	#ifdef SCARA
-	#if !defined(FIVE_BAR)
+	#if !(defined(FIVE_BAR) || (SCARA_TYPE==2))
 	case 360:  // M360 SCARA Theta pos1
       SERIAL_ECHOLN(" Cal: Theta 0 ");
       //SoftEndsEnabled = false;              // Ignore soft endstops during calibration
@@ -3881,6 +3910,26 @@ case 404:  //M404 Enter the nominal filament width (3mm, 1.75mm ) N<3.0> or disp
       }
       break;
     
+    #ifdef SCARA //for now same as delta-code
+    case 453: // M453  scara stuff
+      for(int8_t i=0; i < 5; i++)
+      {
+        if(code_seen('X')) { _Linkage_1 = code_value(); L1_2 = sq(_Linkage_1); }
+        if(code_seen('Y')) { _Linkage_2 = code_value(); L2_2 = sq(_Linkage_2); }
+        if(code_seen('O')) _EndPointMountOffset = code_value();
+        if(code_seen('A')) _EndPointMountAngleRad = code_value()/SCARA_RAD2DEG;
+        if(code_seen('D')) _FiveBarAxesDist = code_value();
+      }
+      break;
+     #endif
+
+    case 454: // M454 xyz home dir
+      for(int8_t i=0; i < 3; i++)
+      {
+        if(code_seen(axis_codes[i])) _home_dir[i] = code_value();
+      }
+      break;
+
     case 999: // M999: Restart after being stopped
       Stopped = false;
       lcd_reset_alert_level();
@@ -4325,12 +4374,13 @@ void calculate_SCARA_forward_Transform(float f_scara[3])
 	//SERIAL_ECHOPGM("f_delta x="); SERIAL_ECHO(f_scara[X_AXIS]);
 	//SERIAL_ECHOPGM(" y="); SERIAL_ECHO(f_scara[Y_AXIS]);
 	
-#if defined(FIVE_BAR)
+#if defined(FIVE_BAR) || (SCARA_TYPE==2)
 	
+	float dhalf = _FiveBarAxesDist/2.0;
+
 	
-	
-	float l = Linkage_1;
-	float L = Linkage_2;
+	float l = _Linkage_1;
+	float L = _Linkage_2;
 	
 	float xd = -dhalf + l * cos(FBSIGN*f_scara[Y_AXIS]/SCARA_RAD2DEG);
 	float yd = l * sin(FBSIGN*f_scara[Y_AXIS]/SCARA_RAD2DEG);
@@ -4347,10 +4397,10 @@ void calculate_SCARA_forward_Transform(float f_scara[3])
 	float xxp = (hx*cosa+hy*sina)*LH+xd;
 	float yyp = (-hx*sina+hy*cosa)*LH+yd;
 	
-	float cosz = cos(-EndPointMountAngleRad);
-	float sinz = sin(-EndPointMountAngleRad);
+	float cosz = cos(-_EndPointMountAngleRad);
+	float sinz = sin(-_EndPointMountAngleRad);
 	
-	float LH2 = EndPointMountOffset/L;
+	float LH2 = _EndPointMountOffset/L;
 	float hhx = xxp-xd;
 	float hhy = yyp-yd;
 	float xp = (hhx*cosz+hhy*sinz)*LH2+xxp;
@@ -4362,10 +4412,10 @@ void calculate_SCARA_forward_Transform(float f_scara[3])
 #else
 	float x_sin, x_cos, y_sin, y_cos;
 	
-	x_sin = sin(f_scara[X_AXIS]/SCARA_RAD2DEG) * Linkage_1;
-	x_cos = cos(f_scara[X_AXIS]/SCARA_RAD2DEG) * Linkage_1;
-	y_sin = sin(f_scara[Y_AXIS]/SCARA_RAD2DEG) * Linkage_2;
-	y_cos = cos(f_scara[Y_AXIS]/SCARA_RAD2DEG) * Linkage_2;
+	x_sin = sin(f_scara[X_AXIS]/SCARA_RAD2DEG) * _Linkage_1;
+	x_cos = cos(f_scara[X_AXIS]/SCARA_RAD2DEG) * _Linkage_1;
+	y_sin = sin(f_scara[Y_AXIS]/SCARA_RAD2DEG) * _Linkage_2;
+	y_cos = cos(f_scara[Y_AXIS]/SCARA_RAD2DEG) * _Linkage_2;
 	//  SERIAL_ECHOPGM(" x_sin="); SERIAL_ECHO(x_sin);
 	//  SERIAL_ECHOPGM(" x_cos="); SERIAL_ECHO(x_cos);
 	//  SERIAL_ECHOPGM(" y_sin="); SERIAL_ECHO(y_sin);
@@ -4389,17 +4439,19 @@ void calculate_delta(float cartesian[3]){
 	SCARA_pos[X_AXIS] = cartesian[X_AXIS] * axis_scaling[X_AXIS] - SCARA_offset_x;  //Translate SCARA to standard X Y
 	SCARA_pos[Y_AXIS] = cartesian[Y_AXIS] * axis_scaling[Y_AXIS] - SCARA_offset_y;  // With scaling factor.
 	
-#if defined(FIVE_BAR)
+#if defined(FIVE_BAR) || (SCARA_TYPE==2)
 	
+  float dhalf = _FiveBarAxesDist/2.0;
+
 	float l2 = L1_2;
 	float L2 = L2_2;
 	float ex = SCARA_pos[X_AXIS];
 	float ey = SCARA_pos[Y_AXIS];
-	float l = Linkage_1;
-	float L = Linkage_2;
+	float l = _Linkage_1;
+	float L = _Linkage_2;
 	
-	float EX = EndPointMountOffset*cos(EndPointMountAngleRad)+L;
-	float EY = EndPointMountOffset*sin(EndPointMountAngleRad);
+	float EX = _EndPointMountOffset*cos(_EndPointMountAngleRad)+L;
+	float EY = _EndPointMountOffset*sin(_EndPointMountAngleRad);
 	//printf("%f\n%f\n",EX,EY);
 	
 	
@@ -4422,7 +4474,7 @@ void calculate_delta(float cartesian[3]){
 	//printf("%f\n%f\n%f\n",lH,xxd,yyd);
 	
 	
-	float K = EndPointMountOffset;
+	float K = _EndPointMountOffset;
 	float LH3 = L/lH;
 	float cosa1 = (L*L+lH*lH-K*K)/(2*L*lH);
 	float sina1 = sqrt(1-cosa1*cosa1);
@@ -4458,16 +4510,16 @@ void calculate_delta(float cartesian[3]){
 	static float SCARA_C2, SCARA_S2, SCARA_K1, SCARA_K2, SCARA_theta, SCARA_psi;
 	
 
-#if (Linkage_1 == Linkage_2)
+#if (_Linkage_1 == _Linkage_2)
 	SCARA_C2 = ( ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) ) / (2 * (float)L1_2) );
 #else
-	SCARA_C2 =   ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) - (float)L1_2 - (float)L2_2 ) / (2*Linkage_1*Linkage_2);
+	SCARA_C2 =   ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) - (float)L1_2 - (float)L2_2 ) / (2*_Linkage_1*_Linkage_2);
 #endif
 	
 	SCARA_S2 = sqrt( 1 - sq(SCARA_C2) );
 	
-	SCARA_K1 = Linkage_1 + Linkage_2 * SCARA_C2;
-	SCARA_K2 = Linkage_2 * SCARA_S2;
+	SCARA_K1 = _Linkage_1 + _Linkage_2 * SCARA_C2;
+	SCARA_K2 = _Linkage_2 * SCARA_S2;
 	
 	SCARA_theta = ( atan2(SCARA_pos[X_AXIS],SCARA_pos[Y_AXIS])-atan2(SCARA_K1, SCARA_K2) ) * -1;
 	SCARA_psi   =   atan2(SCARA_S2,SCARA_C2);
@@ -4807,4 +4859,5 @@ void calculate_volumetric_multipliers() {
 #endif
 #endif
 }
+
 

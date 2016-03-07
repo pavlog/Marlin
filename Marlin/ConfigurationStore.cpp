@@ -122,6 +122,16 @@ void Config_StoreSettings()
   EEPROM_WRITE_VAR(i,_base_max_pos);
   EEPROM_WRITE_VAR(i,_base_home_pos);
   
+  EEPROM_WRITE_VAR(i,_home_dir);
+
+  #ifdef SCARA
+    EEPROM_WRITE_VAR(i,_Linkage_1);
+    EEPROM_WRITE_VAR(i,_Linkage_2);
+    EEPROM_WRITE_VAR(i,_EndPointMountOffset);
+    EEPROM_WRITE_VAR(i,_EndPointMountAngleRad);
+    EEPROM_WRITE_VAR(i,_FiveBarAxesDist);
+  #endif
+
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
@@ -293,6 +303,28 @@ SERIAL_ECHOLNPGM("Scaling factors:");
     SERIAL_ECHOPAIR(" Y" ,_base_home_pos[Y_AXIS] );
     SERIAL_ECHOPAIR(" Z" ,_base_home_pos[Z_AXIS] );
     SERIAL_ECHOLN("");
+
+    #ifdef SCARA
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Scara options: X#Linkage1 YLinkage2 O#EndPointMountOffset A#EndPointMountAnglr D#FiveBarAxisDistances ");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M453 X",_Linkage_1 );
+    SERIAL_ECHOPAIR(" Y" ,_Linkage_2 );
+    SERIAL_ECHOPAIR(" O" ,_EndPointMountOffset );
+    SERIAL_ECHOPAIR(" A" ,_EndPointMountAngleRad*SCARA_RAD2DEG );
+    SERIAL_ECHOPAIR(" D" ,_FiveBarAxesDist );
+    SERIAL_ECHOLN("");
+    #endif
+
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Home dir (1=MAX, -1=MIN):");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M454 X",_home_dir[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" ,_home_dir[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,_home_dir[Z_AXIS] );
+    SERIAL_ECHOLN("");
+
+
 }
 #endif
 
@@ -383,6 +415,18 @@ void Config_RetrieveSettings()
                 EEPROM_READ_VAR(i,_base_min_pos);
                 EEPROM_READ_VAR(i,_base_max_pos);
                 EEPROM_READ_VAR(i,_base_home_pos);
+
+                EEPROM_READ_VAR(i,_home_dir);
+
+    #ifdef SCARA
+                EEPROM_READ_VAR(i,_Linkage_1);
+                EEPROM_READ_VAR(i,_Linkage_2);
+                EEPROM_READ_VAR(i,_EndPointMountOffset);
+                EEPROM_READ_VAR(i,_EndPointMountAngleRad);
+                EEPROM_READ_VAR(i,_FiveBarAxesDist);
+                L1_2 = sq(_Linkage_1);
+                L2_2 = sq(_Linkage_2);
+    #endif
 
 		calculate_volumetric_multipliers();
 		// Call updatePID (similar to when we have processed M301)
@@ -498,7 +542,25 @@ void Config_ResetDefault()
         _base_home_pos[Y_AXIS] = Y_HOME_POS;
         _base_home_pos[Z_AXIS] = Z_HOME_POS;
 
+        _home_dir[X_AXIS] = X_HOME_DIR;
+        _home_dir[Y_AXIS] = Y_HOME_DIR;
+        _home_dir[Z_AXIS] = Z_HOME_DIR;
+
+  #ifdef SCARA
+    #define TEMP_RAD2DEG 57.2957795  // to convert RAD to degrees
+    _Linkage_1 = Linkage_1;
+    _Linkage_2 = Linkage_2;
+    _EndPointMountOffset = EndPointMountOffset;
+    _EndPointMountAngleRad = EndPointMountAngle/TEMP_RAD2DEG;
+    _FiveBarAxesDist = FiveBarAxesDist;
+    //some helper variables to make kinematics faster
+    L1_2 = sq(Linkage_1);
+    L2_2 = sq(Linkage_2);
+  #endif
+
+
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
 
 }
+
