@@ -348,8 +348,8 @@ float _EndPointMountOffset = EndPointMountOffset;
 float _EndPointMountAngleRad = EndPointMountAngle/SCARA_RAD2DEG;
 float _FiveBarAxesDist = FiveBarAxesDist;
 //some helper variables to make kinematics faster
-float L1_2 = sq(Linkage_1);
-float L2_2 = sq(Linkage_2);
+float _L1_2 = sq(Linkage_1);
+float _L2_2 = sq(Linkage_2);
 
 #endif				
 
@@ -1001,7 +1001,7 @@ static void axis_is_at_home(int axis) {
       // and calculates homing offset using forward kinematics
      calculate_delta(homeposition);
 
-		 #if defined(FIVE_BAR) || (SCARA_TYPE==2)
+		 #if defined(FIVE_BAR) || (SCARA_TYPE>=1)
        for (i=0; i<2; i++)
        {
           delta[i] -= FBSIGN*add_homing[i];
@@ -1011,8 +1011,8 @@ static void axis_is_at_home(int axis) {
        //SERIAL_ECHOPGM(" base q2="); SERIAL_ECHOLN(FBSIGN*delta[Y_AXIS]);
 		 #else   
      
-      // SERIAL_ECHOPGM("base Theta= "); SERIAL_ECHO(delta[X_AXIS]);
-      // SERIAL_ECHOPGM(" base Psi+Theta="); SERIAL_ECHOLN(delta[Y_AXIS]);
+      //SERIAL_ECHOPGM("base Theta= "); SERIAL_ECHO(delta[X_AXIS]);
+      //SERIAL_ECHOPGM(" base Psi+Theta="); SERIAL_ECHOLN(delta[Y_AXIS]);
      
        for (i=0; i<2; i++)
        {
@@ -1030,7 +1030,7 @@ static void axis_is_at_home(int axis) {
     //SERIAL_ECHOPGM(" Delta Y="); SERIAL_ECHOLN(delta[Y_AXIS]);
      
     current_position[axis] = delta[axis];
-    
+
     // SCARA home positions are based on configuration since the actual limits are determined by the 
     // inverse kinematic transform.
     min_pos[axis] =          base_min_pos(axis); // + (delta[axis] - base_home_pos(axis));
@@ -1623,7 +1623,7 @@ void process_commands()
       if(code_seen(axis_codes[X_AXIS]))
       {
         if(code_value_long() != 0) {
-		#ifdef SCARA && !(defined(FIVE_BAR) || (SCARA_TYPE==2))
+		#if defined(SCARA) && !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
 		   current_position[X_AXIS]=code_value();
 		#else
 		   current_position[X_AXIS]=code_value()+add_homing[X_AXIS];
@@ -1633,7 +1633,7 @@ void process_commands()
 
       if(code_seen(axis_codes[Y_AXIS])) {
         if(code_value_long() != 0) {
-		#ifdef SCARA && !(defined(FIVE_BAR) || (SCARA_TYPE==2))
+		#if defined(SCARA) && !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
 			current_position[Y_AXIS]=code_value();
 		#else
 		   current_position[Y_AXIS]=code_value()+add_homing[Y_AXIS];
@@ -1924,7 +1924,7 @@ void process_commands()
              plan_set_e_position(current_position[E_AXIS]);
            }
            else {
-#ifdef SCARA && !(defined(FIVE_BAR) || (SCARA_TYPE==2))
+#if defined(SCARA) && !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
 		if (i == X_AXIS || i == Y_AXIS) {
                 	current_position[i] = code_value();  
 		}
@@ -2729,7 +2729,7 @@ Sigma_Exit:
       #endif
       #ifdef ULTIPANEL
         powersupply = false;
-        LCD_MESSAGEPGM(MACHINE_NAME" "MSG_OFF".");
+        LCD_MESSAGEPGM(MACHINE_NAME " " MSG_OFF "." );
         lcd_update();
       #endif
 	  break;
@@ -2826,7 +2826,7 @@ Sigma_Exit:
 
       SERIAL_PROTOCOLLN("");
 #ifdef SCARA
-      #if defined(FIVE_BAR) || (SCARA_TYPE==2)
+      #if defined(FIVE_BAR) || (SCARA_TYPE>=1)
         SERIAL_PROTOCOLPGM("SCARA q1:");
         SERIAL_PROTOCOL(FBSIGN*delta[X_AXIS]);
         SERIAL_PROTOCOLPGM("   q2:");
@@ -2853,6 +2853,14 @@ Sigma_Exit:
         SERIAL_PROTOCOLLN("");
         SERIAL_PROTOCOLLN("");
       #endif
+        SERIAL_PROTOCOLPGM("L1:");
+        SERIAL_PROTOCOL(_Linkage_1);
+        SERIAL_PROTOCOLPGM("L2:");
+        SERIAL_PROTOCOL(_Linkage_2);
+        SERIAL_PROTOCOLPGM("sq(L1):");
+        SERIAL_PROTOCOL(_L1_2);
+        SERIAL_PROTOCOLPGM("sq(L2):");
+        SERIAL_PROTOCOL(_L2_2);
 #endif
       break;
     case 120: // M120
@@ -3378,7 +3386,7 @@ Sigma_Exit:
     }
     break;
 	#ifdef SCARA
-	#if !(defined(FIVE_BAR) || (SCARA_TYPE==2))
+	#if !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
 	case 360:  // M360 SCARA Theta pos1
       SERIAL_ECHOLN(" Cal: Theta 0 ");
       //SoftEndsEnabled = false;              // Ignore soft endstops during calibration
@@ -3914,8 +3922,8 @@ case 404:  //M404 Enter the nominal filament width (3mm, 1.75mm ) N<3.0> or disp
     case 453: // M453  scara stuff
       for(int8_t i=0; i < 5; i++)
       {
-        if(code_seen('X')) { _Linkage_1 = code_value(); L1_2 = sq(_Linkage_1); }
-        if(code_seen('Y')) { _Linkage_2 = code_value(); L2_2 = sq(_Linkage_2); }
+        if(code_seen('X')) { _Linkage_1 = code_value(); _L1_2 = sq(_Linkage_1); }
+        if(code_seen('Y')) { _Linkage_2 = code_value(); _L2_2 = sq(_Linkage_2); }
         if(code_seen('O')) _EndPointMountOffset = code_value();
         if(code_seen('A')) _EndPointMountAngleRad = code_value()/SCARA_RAD2DEG;
         if(code_seen('D')) _FiveBarAxesDist = code_value();
@@ -4374,7 +4382,26 @@ void calculate_SCARA_forward_Transform(float f_scara[3])
 	//SERIAL_ECHOPGM("f_delta x="); SERIAL_ECHO(f_scara[X_AXIS]);
 	//SERIAL_ECHOPGM(" y="); SERIAL_ECHO(f_scara[Y_AXIS]);
 	
-#if defined(FIVE_BAR) || (SCARA_TYPE==2)
+#if defined(SCARA_TYPE) && (SCARA_TYPE==1)
+  
+  float angleX = FBSIGN*f_scara[X_AXIS]/SCARA_RAD2DEG;
+  float angleY = FBSIGN*f_scara[Y_AXIS]/SCARA_RAD2DEG+M_PI;
+  
+  float x_sin, x_cos, y_sin, y_cos;
+  
+  x_sin = sin(angleX) * _Linkage_1;
+  x_cos = cos(angleX) * _Linkage_1;
+  y_sin = sin(angleY) * _Linkage_2;
+  y_cos = cos(angleY) * _Linkage_2;
+  //  SERIAL_ECHOPGM(" x_sin="); SERIAL_ECHO(x_sin);
+  //  SERIAL_ECHOPGM(" x_cos="); SERIAL_ECHO(x_cos);
+  //  SERIAL_ECHOPGM(" y_sin="); SERIAL_ECHO(y_sin);
+  //  SERIAL_ECHOPGM(" y_cos="); SERIAL_ECHOLN(y_cos);
+  
+  delta[X_AXIS] = x_cos + y_cos + SCARA_offset_x;  //theta
+  delta[Y_AXIS] = x_sin + y_sin + SCARA_offset_y;  //theta+phi
+
+#elif defined(FIVE_BAR) || (SCARA_TYPE==2)
 	
 	float dhalf = _FiveBarAxesDist/2.0;
 
@@ -4429,7 +4456,68 @@ void calculate_SCARA_forward_Transform(float f_scara[3])
 	//SERIAL_ECHOPGM(" delta[Y_AXIS]="); SERIAL_ECHOLN(delta[Y_AXIS]);
 }
 
-void calculate_delta(float cartesian[3]){
+
+void calcReverse(const float x,const  float y,const float l,const float L,const float l2,const float L2,const float dhalf,float& q11,float& q22)
+{
+  static float y2,x2,A,B,C,F,E,Det1,Det2,qq11,qq22;
+
+  y2 = sq(y);
+
+#if defined(SCARA_TYPE) && (SCARA_TYPE==1)
+  x2 = sq(x);
+  A = -2.0f * l * x;
+  B = -2.0f * y * l;
+  C = x2 + y2 + l2 - L2;
+  F = x2 + y2 + l2 - L2;
+  E = -2.0f  * l * x;
+  Det1 = B * B - (C * C - A * A);
+  Det2 = B * B - (F * F - E * E);
+  
+  qq11 = (-B - sqrt(Det1)) / (C - A);
+  q11 = 2 * atan(qq11);
+  
+  qq22 = (-B + sqrt(Det2)) / (F - E);
+  q22 = 2 * atan(qq22);
+
+  q22-=M_PI;
+
+#else
+  static float xmdhalf,xpdhalf;
+  xmdhalf = (x - dhalf);
+  xpdhalf = (x + dhalf);
+
+  A = -2.0f * l * xmdhalf;
+  B = -2.0f * y * l;
+  C = sq(xmdhalf) + y2 + l2 - L2;
+  F = sq(xpdhalf) + y2 + l2 - L2;
+  E = -2.0f  * l * xpdhalf;
+  Det1 = B * B - (C * C - A * A);
+  Det2 = B * B - (F * F - E * E);
+  
+  qq11 = (-B - sqrt(Det1)) / (C - A);
+  q11 = 2 * atan(qq11);
+  
+  qq22 = (-B + sqrt(Det2)) / (F - E);
+  q22 = 2 * atan(qq22);
+
+  //SERIAL_ECHOPGM(" xmdhalf="); SERIAL_ECHOLN(xmdhalf);
+  //SERIAL_ECHOPGM(" xpdhalf="); SERIAL_ECHOLN(xpdhalf);
+#endif
+  
+  //SERIAL_ECHOPGM(" x="); SERIAL_ECHO(x);
+  //SERIAL_ECHOPGM(" y="); SERIAL_ECHOLN(y);
+  //SERIAL_ECHOPGM(" y2="); SERIAL_ECHOLN(y2);
+  //SERIAL_ECHOPGM(" A="); SERIAL_ECHOLN(A);
+  //SERIAL_ECHOPGM(" B="); SERIAL_ECHOLN(B);
+  //SERIAL_ECHOPGM(" C="); SERIAL_ECHOLN(C);
+  //SERIAL_ECHOPGM(" E="); SERIAL_ECHOLN(E);
+  //SERIAL_ECHOPGM(" F="); SERIAL_ECHOLN(F);
+  //SERIAL_ECHOPGM(" Det1="); SERIAL_ECHOLN(Det1);
+  //SERIAL_ECHOPGM(" Det2="); SERIAL_ECHOLN(Det2);
+}
+
+void calculate_delta(float cartesian[3])
+{
 	//reverse kinematics.
 	// Perform reversed kinematics, and place results in delta[3]
 	// The maths and first version has been done by QHARLEY . Integrated into masterbranch 06/2014 and slightly restructured by Joachim Cerny in June 2014
@@ -4438,71 +4526,94 @@ void calculate_delta(float cartesian[3]){
 	
 	SCARA_pos[X_AXIS] = cartesian[X_AXIS] * axis_scaling[X_AXIS] - SCARA_offset_x;  //Translate SCARA to standard X Y
 	SCARA_pos[Y_AXIS] = cartesian[Y_AXIS] * axis_scaling[Y_AXIS] - SCARA_offset_y;  // With scaling factor.
-	
-#if defined(FIVE_BAR) || (SCARA_TYPE==2)
-	
-  float dhalf = _FiveBarAxesDist/2.0;
 
-	float l2 = L1_2;
-	float L2 = L2_2;
-	float ex = SCARA_pos[X_AXIS];
-	float ey = SCARA_pos[Y_AXIS];
-	float l = _Linkage_1;
-	float L = _Linkage_2;
+  //SERIAL_ECHOPGM(" cartesian[X_AXIS]="); SERIAL_ECHO(cartesian[X_AXIS]);
+  //SERIAL_ECHOPGM(" cartesian[Y_AXIS]="); SERIAL_ECHOLN(cartesian[Y_AXIS]);
+
+  //SERIAL_ECHOPGM(" SCARA_pos[X_AXIS]="); SERIAL_ECHO(SCARA_pos[X_AXIS]);
+  //SERIAL_ECHOPGM(" SCARA_pos[Y_AXIS]="); SERIAL_ECHOLN(SCARA_pos[Y_AXIS]);
+  
+#if defined(FIVE_BAR) || (SCARA_TYPE>=1)
 	
-	float EX = _EndPointMountOffset*cos(_EndPointMountAngleRad)+L;
-	float EY = _EndPointMountOffset*sin(_EndPointMountAngleRad);
-	//printf("%f\n%f\n",EX,EY);
+  static float x,y,dhalf,l2,L2,ex,ey,l,L;
+  
+  dhalf = 0.0f;//_FiveBarAxesDist/2.0f;
+
+	l2 = _L1_2;
+	L2 = _L2_2;
+	ex = SCARA_pos[X_AXIS];
+	ey = SCARA_pos[Y_AXIS];
+	l = _Linkage_1;
+	L = _Linkage_2;
 	
-	
-	float lHp2 = (EX)*(EX)+EY*EY;
-	float lH = sqrt(lHp2);
-	
-	//	float AA = -2 * l * (ex - dhalf);
-	float BB = -2 * ey * l;
-	//	float CC = (ex - dhalf) * (ex - dhalf) + ey * ey + l2 - lHp2;
-	float FF = (ex + dhalf) * (ex + dhalf) + ey * ey + l2 - lHp2;
-	float EE = -2  * l * (ex+dhalf);
-	float Det2e = BB * BB - (FF * FF - EE * EE);
-	
-	float qq21e = (-BB + sqrt(Det2e)) / (FF - EE);
-	float q21e = 2 * atan(qq21e);
-	
-	float xxd = -dhalf + l * cos(q21e);
-	float yyd = l * sin(q21e);
-	
-	//printf("%f\n%f\n%f\n",lH,xxd,yyd);
-	
-	
-	float K = _EndPointMountOffset;
-	float LH3 = L/lH;
-	float cosa1 = (L*L+lH*lH-K*K)/(2*L*lH);
-	float sina1 = sqrt(1-cosa1*cosa1);
-	float rx = ex-xxd;
-	float ry = ey-yyd;
-	float x = (rx*cosa1+ry*sina1)*LH3+xxd;
-	float y = (-rx*sina1+ry*cosa1)*LH3+yyd;
-	
-	float A = -2.0 * l * (x - dhalf);
-	float B = -2.0 * y * l;
-	float C = (x - dhalf) * (x - dhalf) + y * y + l2 - L2;
-	float F = (x + dhalf) * (x + dhalf) + y * y + l2 - L2;
-	float E = -2.0  * l * (x+dhalf);
-	float Det1 = B * B - (C * C - A * A);
-	float Det2 = B * B - (F * F - E * E);
-	
-	float qq11 = (-B - sqrt(Det1)) / (C - A);
-	float q11 = 2 * atan(qq11);
-	//float qq12 = (-B + sqrt(Det1)) / (C - A);
-	//float q12 = 2 * atan(qq12);
-	
-	//float qq21 = (-B - sqrt(Det2)) / (F - E);
-	//float q21 = 2 * atan(qq21);
-	float qq22 = (-B + sqrt(Det2)) / (F - E);
-	float q22 = 2 * atan(qq22);
-	
-	q22 = q22 < 0 ? 2*M_PI+q22 : q22;
-	
+  //SERIAL_ECHOPGM(" l="); SERIAL_ECHO(l);
+  //SERIAL_ECHOPGM(" L="); SERIAL_ECHOLN(L);
+
+  //SERIAL_ECHOPGM(" l2="); SERIAL_ECHO(_L1_2);
+  //SERIAL_ECHOPGM(" L2="); SERIAL_ECHOLN(_L2_2);
+  //SERIAL_ECHOPGM(" _FiveBarAxesDist="); SERIAL_ECHOLN(_FiveBarAxesDist);
+  //SERIAL_ECHOPGM(" dhalf="); SERIAL_ECHOLN(dhalf);
+  //SERIAL_ECHOPGM(" _EndPointMountOffset="); SERIAL_ECHOLN(_EndPointMountOffset);
+
+  if( abs(_EndPointMountOffset)>0.001f )
+  {
+  	float LnewX = _EndPointMountOffset*cos(_EndPointMountAngleRad);
+  	float LnewY = _EndPointMountOffset*sin(_EndPointMountAngleRad);
+  	//printf("%f\n%f\n",EX,EY);
+    //SERIAL_ECHOPGM(" LnewX="); SERIAL_ECHOLN(LnewX);
+    //SERIAL_ECHOPGM(" LnewY="); SERIAL_ECHOLN(LnewY);
+  	
+  	
+  	float lHp2 = sq(L+LnewX)+sq(LnewY);
+  	float lH = sqrt(lHp2);
+  
+    //SERIAL_ECHOPGM(" lHp2="); SERIAL_ECHOLN(lHp2);
+    //SERIAL_ECHOPGM(" lH="); SERIAL_ECHOLN(lH);
+  
+  	//	float AA = -2 * l * (ex - dhalf);
+  	float BB = -2 * ey * l;
+    //SERIAL_ECHOPGM(" BB="); SERIAL_ECHO(BB);
+  	//	float CC = (ex - dhalf) * (ex - dhalf) + ey * ey + l2 - lHp2;
+  	float FF = (ex + dhalf) * (ex + dhalf) + ey * ey + l2 - lHp2;
+    //SERIAL_ECHOPGM(" FF="); SERIAL_ECHO(FF);
+  	float EE = -2  * l * (ex+dhalf);
+    //SERIAL_ECHOPGM(" EE="); SERIAL_ECHO(EE);
+  	float Det2e = BB * BB - (FF * FF - EE * EE);
+    //SERIAL_ECHOPGM(" Det2e="); SERIAL_ECHO(Det2e);
+  	
+  	float qq21e = (-BB + sqrt(Det2e)) / (FF - EE);
+  	float q21e = 2 * atan(qq21e);
+    //SERIAL_ECHOPGM(" qq21e="); SERIAL_ECHO(qq21e);
+    //SERIAL_ECHOPGM(" q21e="); SERIAL_ECHOLN(q21e);
+  	
+  	float xxd = -dhalf + l * cos(q21e);
+  	float yyd = l * sin(q21e);
+  	
+    //SERIAL_ECHOPGM(" xxd="); SERIAL_ECHO(xxd);
+    //SERIAL_ECHOPGM(" yyd="); SERIAL_ECHOLN(yyd);
+  	//printf("%f\n%f\n%f\n",lH,xxd,yyd);
+  	
+  	
+  	float K = _EndPointMountOffset;
+  	float LH3 = L/lH;
+  	float cosa1 = (L*L+lH*lH-K*K)/(2*L*lH);
+  	float sina1 = sqrt(1-cosa1*cosa1);
+  	float rx = ex-xxd;
+  	float ry = ey-yyd;
+    x = (rx*cosa1+ry*sina1)*LH3+xxd;
+    y = (-rx*sina1+ry*cosa1)*LH3+yyd;
+  }
+  else
+  {
+    x = ex;
+    y = ey;
+  }
+  
+  float q11,q22;
+  calcReverse(x, y,_Linkage_1,_Linkage_2,_L1_2,_L2_2,dhalf,q11,q22);
+
+  //q22 = q22 < 0 ? 2*M_PI+q22 : q22;
+  
 	delta[X_AXIS] = FBSIGN * q11 * SCARA_RAD2DEG;
 	delta[Y_AXIS] = FBSIGN * q22 * SCARA_RAD2DEG;
 	
@@ -4859,5 +4970,6 @@ void calculate_volumetric_multipliers() {
 #endif
 #endif
 }
+
 
 

@@ -2965,6 +2965,8 @@ DaveX plan for Teensylu/printrboard-type pinouts (ref teensylu & sprinter) for a
 #endif
 
 #ifdef DISABLE_XYMAX_ENDSTOPS
+#undef X_MAX_PIN
+#undef Y_MAX_PIN
 #define X_MAX_PIN          -1
 #define Y_MAX_PIN          -1
 #endif
@@ -2976,3 +2978,4 @@ DaveX plan for Teensylu/printrboard-type pinouts (ref teensylu & sprinter) for a
                         analogInputToDigitalPin(TEMP_0_PIN), analogInputToDigitalPin(TEMP_1_PIN), analogInputToDigitalPin(TEMP_2_PIN), analogInputToDigitalPin(TEMP_BED_PIN) }
 
 #endif //__PINS_H
+

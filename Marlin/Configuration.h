@@ -16,7 +16,8 @@
 // You might need Z-Min endstop on SCARA-Printer to use this feature. Actually untested!
 // Uncomment to use Morgan scara mode
 #define SCARA  
-#define SCARA_TYPE 2
+#define SCARA_TYPE 1
+//#define SCARA_TYPE 2
 // 0 - QHARLEYS scara code path
 //
 //
@@ -50,7 +51,7 @@
 
 
 #define FIVE_BAR  // http://cdn.intechopen.com/pdfs-wm/867.pdf for math but extended by end effector mount
-#define FBSIGN -1
+#define FBSIGN 1
 #define scara_segments_per_second 100 //careful, two much will decrease performance...
 // Length of inner support arm
 #define Linkage_1 70 //mm      Preprocessor cannot handle decimal point...
@@ -849,4 +850,5 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #include "thermistortables.h"
 
 #endif //__CONFIGURATION_H
+
 

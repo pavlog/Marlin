@@ -235,8 +235,8 @@ extern float _Linkage_2;
 extern float _EndPointMountOffset;
 extern float _EndPointMountAngleRad;
 extern float _FiveBarAxesDist;
-extern float L1_2;
-extern float L2_2;
+extern float _L1_2;
+extern float _L2_2;
 #endif
 extern float min_pos[3];
 extern float max_pos[3];
@@ -287,5 +287,6 @@ extern void digipot_i2c_init();
 #endif
 
 extern void calculate_volumetric_multipliers();
+
 
 

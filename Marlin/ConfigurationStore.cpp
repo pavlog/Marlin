@@ -424,8 +424,8 @@ void Config_RetrieveSettings()
                 EEPROM_READ_VAR(i,_EndPointMountOffset);
                 EEPROM_READ_VAR(i,_EndPointMountAngleRad);
                 EEPROM_READ_VAR(i,_FiveBarAxesDist);
-                L1_2 = sq(_Linkage_1);
-                L2_2 = sq(_Linkage_2);
+                _L1_2 = sq(_Linkage_1);
+                _L2_2 = sq(_Linkage_2);
     #endif
 
 		calculate_volumetric_multipliers();
@@ -554,8 +554,8 @@ void Config_ResetDefault()
     _EndPointMountAngleRad = EndPointMountAngle/TEMP_RAD2DEG;
     _FiveBarAxesDist = FiveBarAxesDist;
     //some helper variables to make kinematics faster
-    L1_2 = sq(Linkage_1);
-    L2_2 = sq(Linkage_2);
+    _L1_2 = sq(Linkage_1);
+    _L2_2 = sq(Linkage_2);
   #endif
 
 
@@ -563,4 +563,5 @@ SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
 
 }
+
 
