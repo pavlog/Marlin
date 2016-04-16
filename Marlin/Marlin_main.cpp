@@ -4612,6 +4612,8 @@ void calculate_delta(float cartesian[3])
   float q11,q22;
   calcReverse(x, y,_Linkage_1,_Linkage_2,_L1_2,_L2_2,dhalf,q11,q22);
 
+  q22 = (q22<=0 && q22>=-M_PI) ? q22 : (2*M_PI+q22);//q22<=0 && q22>-180 ? q22 : (q22>=0 && q22<=180)  
+
   //q22 = q22 < 0 ? 2*M_PI+q22 : q22;
   
 	delta[X_AXIS] = FBSIGN * q11 * SCARA_RAD2DEG;
