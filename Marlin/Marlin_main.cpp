@@ -4191,40 +4191,43 @@ void prepare_move()
   
   #ifdef SCARA //for now same as delta-code
 
-float difference[NUM_AXIS];
-for (int8_t i=0; i < NUM_AXIS; i++) {
-	difference[i] = destination[i] - current_position[i];
-}
-
-float cartesian_mm = sqrt(	sq(difference[X_AXIS]) +
-							sq(difference[Y_AXIS]) +
-							sq(difference[Z_AXIS]));
-if (cartesian_mm < 0.000001) { cartesian_mm = abs(difference[E_AXIS]); }
-if (cartesian_mm < 0.000001) { return; }
-float seconds = 6000 * cartesian_mm / feedrate / feedmultiply;
-int steps = max(1, int(scara_segments_per_second * seconds));
- //SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
- //SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
- //SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
-for (int s = 1; s <= steps; s++) {
-	float fraction = float(s) / float(steps);
-	for(int8_t i=0; i < NUM_AXIS; i++) {
-		destination[i] = current_position[i] + difference[i] * fraction;
-	}
-
-	
-	calculate_delta(destination);
-         //SERIAL_ECHOPGM("destination[X_AXIS]="); SERIAL_ECHOLN(destination[X_AXIS]);
-         //SERIAL_ECHOPGM("destination[Y_AXIS]="); SERIAL_ECHOLN(destination[Y_AXIS]);
-         //SERIAL_ECHOPGM("destination[Z_AXIS]="); SERIAL_ECHOLN(destination[Z_AXIS]);
-         //SERIAL_ECHOPGM("delta[X_AXIS]="); SERIAL_ECHOLN(delta[X_AXIS]);
-         //SERIAL_ECHOPGM("delta[Y_AXIS]="); SERIAL_ECHOLN(delta[Y_AXIS]);
-         //SERIAL_ECHOPGM("delta[Z_AXIS]="); SERIAL_ECHOLN(delta[Z_AXIS]);
-         
-	plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
-	destination[E_AXIS], feedrate*feedmultiply/60/100.0,
-	active_extruder);
-}
+  float difference[NUM_AXIS];
+  for (int8_t i=0; i < NUM_AXIS; i++) 
+  {
+  	difference[i] = destination[i] - current_position[i];
+  }
+  
+  float cartesian_mm = sqrt(	sq(difference[X_AXIS]) +
+  							sq(difference[Y_AXIS]) +
+  							sq(difference[Z_AXIS]));
+  if (cartesian_mm < 0.000001) { cartesian_mm = abs(difference[E_AXIS]); }
+  if (cartesian_mm < 0.000001) { return; }
+  float seconds = 60 * cartesian_mm / feedrate;
+  int steps = max(1, int(scara_segments_per_second * seconds * (feedmultiply / 100.0)));
+  //SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
+  //SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
+  //SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
+  for (int s = 1; s <= steps; s++) 
+  {
+  	float fraction = float(s) / float(steps);
+  	for(int8_t i=0; i < NUM_AXIS; i++) 
+  	{
+  		destination[i] = current_position[i] + difference[i] * fraction;
+  	}
+  	
+  	calculate_delta(destination);
+    
+    //SERIAL_ECHOPGM("destination[X_AXIS]="); SERIAL_ECHOLN(destination[X_AXIS]);
+    //SERIAL_ECHOPGM("destination[Y_AXIS]="); SERIAL_ECHOLN(destination[Y_AXIS]);
+    //SERIAL_ECHOPGM("destination[Z_AXIS]="); SERIAL_ECHOLN(destination[Z_AXIS]);
+    //SERIAL_ECHOPGM("delta[X_AXIS]="); SERIAL_ECHOLN(delta[X_AXIS]);
+    //SERIAL_ECHOPGM("delta[Y_AXIS]="); SERIAL_ECHOLN(delta[Y_AXIS]);
+    //SERIAL_ECHOPGM("delta[Z_AXIS]="); SERIAL_ECHOLN(delta[Z_AXIS]);
+           
+  	plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
+  	destination[E_AXIS], feedrate*feedmultiply/60/100.0,
+  	active_extruder);
+  }
 #endif // SCARA
   
 #ifdef DELTA
@@ -4481,6 +4484,37 @@ void calcReverse(const float x,const  float y,const float l,const float L,const 
 
   q22-=M_PI;
 
+  q22 = (q22<=0 && q22>=-M_PI) ? q22 : (2*M_PI+q22);
+  //q22 = fmod(q22+M_PI,2.0f*M_PI);
+  //if( q22<0 )
+  //  q22+=2.0f*M_PI;
+  //q22-=M_PI;
+
+
+// not required
+  //q11 = fmod(q11+M_PI,2.0f*M_PI);
+  //if( q11<0 )
+  //  q11+=2.0f*M_PI;
+  //q11-=M_PI;
+
+  //q11+=4*M_PI;
+  //q22+=4*M_PI;
+
+  //if( Det1<0 || Det2<0 )
+  /*
+  {
+      SERIAL_ECHOPGM(" x="); SERIAL_ECHO(x);
+      SERIAL_ECHOPGM(" y="); SERIAL_ECHO(y);
+      SERIAL_ECHOPGM(" Det1="); SERIAL_ECHO(Det1);
+      SERIAL_ECHOPGM(" Det2="); SERIAL_ECHO(Det2);
+      SERIAL_ECHOPGM(" q11="); SERIAL_ECHO(q11*180/M_PI);
+      SERIAL_ECHOPGM(" q22="); SERIAL_ECHOLN(q22*180/M_PI);
+  }
+  //  SERIAL_ECHOPGM(" cp="); SERIAL_ECHO(x); SERIAL_ECHO(y); SERIAL_ECHO(z); SERIAL_ECHOLN(e);
+  */
+
+
+
 #else
   static float xmdhalf,xpdhalf;
   xmdhalf = (x - dhalf);
@@ -4500,6 +4534,8 @@ void calcReverse(const float x,const  float y,const float l,const float L,const 
   qq22 = (-B + sqrt(Det2)) / (F - E);
   q22 = 2 * atan(qq22);
 
+  q22 = q22 < 0 ? 2*M_PI+q22 : q22;
+  
   //SERIAL_ECHOPGM(" xmdhalf="); SERIAL_ECHOLN(xmdhalf);
   //SERIAL_ECHOPGM(" xpdhalf="); SERIAL_ECHOLN(xpdhalf);
 #endif
@@ -4612,10 +4648,6 @@ void calculate_delta(float cartesian[3])
   float q11,q22;
   calcReverse(x, y,_Linkage_1,_Linkage_2,_L1_2,_L2_2,dhalf,q11,q22);
 
-  q22 = (q22<=0 && q22>=-M_PI) ? q22 : (2*M_PI+q22);//q22<=0 && q22>-180 ? q22 : (q22>=0 && q22<=180)  
-
-  //q22 = q22 < 0 ? 2*M_PI+q22 : q22;
-  
 	delta[X_AXIS] = FBSIGN * q11 * SCARA_RAD2DEG;
 	delta[Y_AXIS] = FBSIGN * q22 * SCARA_RAD2DEG;
 	
