@@ -130,6 +130,7 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,_EndPointMountOffset);
     EEPROM_WRITE_VAR(i,_EndPointMountAngleRad);
     EEPROM_WRITE_VAR(i,_FiveBarAxesDist);
+    EEPROM_WRITE_VAR(i,_scara_segments_per_second);
   #endif
 
   char ver2[4]=EEPROM_VERSION;
@@ -313,6 +314,7 @@ SERIAL_ECHOLNPGM("Scaling factors:");
     SERIAL_ECHOPAIR(" O" ,_EndPointMountOffset );
     SERIAL_ECHOPAIR(" A" ,_EndPointMountAngleRad*SCARA_RAD2DEG );
     SERIAL_ECHOPAIR(" D" ,_FiveBarAxesDist );
+    SERIAL_ECHOPAIR(" S" ,_scara_segments_per_second );
     SERIAL_ECHOLN("");
     #endif
 
@@ -424,6 +426,7 @@ void Config_RetrieveSettings()
                 EEPROM_READ_VAR(i,_EndPointMountOffset);
                 EEPROM_READ_VAR(i,_EndPointMountAngleRad);
                 EEPROM_READ_VAR(i,_FiveBarAxesDist);
+                EEPROM_READ_VAR(i,_scara_segments_per_second);
                 _L1_2 = sq(_Linkage_1);
                 _L2_2 = sq(_Linkage_2);
     #endif

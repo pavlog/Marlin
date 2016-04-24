@@ -237,6 +237,7 @@ extern float _EndPointMountAngleRad;
 extern float _FiveBarAxesDist;
 extern float _L1_2;
 extern float _L2_2;
+extern float _scara_segments_per_second;
 #endif
 extern float min_pos[3];
 extern float max_pos[3];

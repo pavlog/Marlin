@@ -270,11 +270,17 @@
 
 //12v Heatbed Mk3 12V in parallel
 //from pidautotune
-    #define  DEFAULT_bedKp 630.14
-    #define  DEFAULT_bedKi 121.71
-    #define  DEFAULT_bedKd 815.64
+//    #define  DEFAULT_bedKp 630.14
+//    #define  DEFAULT_bedKi 121.71
+//    #define  DEFAULT_bedKd 815.64
     
-// FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
+//12v Heatbed Mk2b 12V in parallel
+//from pidautotune
+    #define  DEFAULT_bedKp 538.07
+    #define  DEFAULT_bedKi 106.71
+    #define  DEFAULT_bedKd 684.02
+
+// FIND YOUR OWN: "M303 E-1 C8 S95" to run autotune on the bed at 90 degreesC for 8 cycles.
 #endif // PIDTEMPBED
 
 
@@ -540,10 +546,10 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // default settings
 // Theory for xy(unit is a degree): stepperUnitsPerRevolution*driverMicrostepping*gearboxration/360, sscara (with drv8825 1/32) = 200*32*5/360 = 88.888
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {88.888,88.888,200,300}  // default steps per unit for SCARA
-#define DEFAULT_MAX_FEEDRATE          {30, 30, 30, 70}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {300,300,20,1000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_MAX_FEEDRATE          {300, 300, 30, 70}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {3000,3000,200,1000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
-#define DEFAULT_ACCELERATION          400    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
+#define DEFAULT_ACCELERATION          3000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  2000  // X, Y, Z and E max acceleration in mm/s^2 for retracts
 
 // Offset of the extruders (uncomment if using more than one and relying on firmware to position when changing).
@@ -553,9 +559,9 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // #define EXTRUDER_OFFSET_Y {0.0, 5.00}  // (in mm) for each extruder, offset of the hotend on the Y axis
 
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
-#define DEFAULT_XYJERK                5    // (mm/sec)
-#define DEFAULT_ZJERK                 0.4    // (mm/sec)
-#define DEFAULT_EJERK                 3    // (mm/sec)
+#define DEFAULT_XYJERK                20    // (mm/sec)
+#define DEFAULT_ZJERK                 5    // (mm/sec)
+#define DEFAULT_EJERK                 5    // (mm/sec)
 
 //===========================================================================
 //=============================Additional Features===========================

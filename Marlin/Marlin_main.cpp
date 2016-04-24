@@ -191,11 +191,11 @@
 //                 \     /
 //                  \  /
 //                  q2(y) q1(x)
-// 
+//
 // M450 - xyz min limits
 // M451 - xyz max limits
 // M452 - xyz home pos
-// M453 - X#Linkage1 YLinkage2 O#EndPointMountOffset A#EndPointMountAnglr D#AxisDistances
+// M453 - X#Linkage1 YLinkage2 O#EndPointMountOffset A#EndPointMountAnglr D#AxisDistances S#scara_segments_per_second
 // M454 - xyz home dir
 
 // M928 - Start SD logging (M928 filename.g) - ended by M29
@@ -350,7 +350,7 @@ float _FiveBarAxesDist = FiveBarAxesDist;
 //some helper variables to make kinematics faster
 float _L1_2 = sq(Linkage_1);
 float _L2_2 = sq(Linkage_2);
-
+float _scara_segments_per_second = scara_segments_per_second;
 #endif				
 
 bool cancel_heatup = false ;
@@ -3927,6 +3927,7 @@ case 404:  //M404 Enter the nominal filament width (3mm, 1.75mm ) N<3.0> or disp
         if(code_seen('O')) _EndPointMountOffset = code_value();
         if(code_seen('A')) _EndPointMountAngleRad = code_value()/SCARA_RAD2DEG;
         if(code_seen('D')) _FiveBarAxesDist = code_value();
+        if(code_seen('S')) _scara_segments_per_second = code_value();
       }
       break;
      #endif
@@ -4203,7 +4204,7 @@ void prepare_move()
   if (cartesian_mm < 0.000001) { cartesian_mm = abs(difference[E_AXIS]); }
   if (cartesian_mm < 0.000001) { return; }
   float seconds = 60 * cartesian_mm / feedrate;
-  int steps = max(1, int(scara_segments_per_second * seconds * (feedmultiply / 100.0)));
+  int steps = max(1, int(_scara_segments_per_second * seconds * (feedmultiply / 100.0)));
   //SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
   //SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
   //SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
@@ -4471,15 +4472,12 @@ void calcReverse(const float x,const  float y,const float l,const float L,const 
   A = -2.0f * l * x;
   B = -2.0f * y * l;
   C = x2 + y2 + l2 - L2;
-  F = x2 + y2 + l2 - L2;
-  E = -2.0f  * l * x;
   Det1 = B * B - (C * C - A * A);
-  Det2 = B * B - (F * F - E * E);
   
   qq11 = (-B - sqrt(Det1)) / (C - A);
   q11 = 2 * atan(qq11);
   
-  qq22 = (-B + sqrt(Det2)) / (F - E);
+  qq22 = (-B + sqrt(Det1)) / (C - A);
   q22 = 2 * atan(qq22);
 
   q22-=M_PI;
