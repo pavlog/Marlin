@@ -9,7 +9,7 @@
  - added M450 - xyz min limits
  - added M451 - xyz max limits
  - added M452 - xyz home pos
- - added M453 - X#Linkage1 YLinkage2 O#EndPointMountOffset A#EndPointMountAnglr D#AxisDistances
+ - added M453 - X#Linkage1 YLinkage2 O#EndPointMountOffset A#EndPointMountAnglr D#AxisDistances S#scara_segments_per_second
  - added M454 - xyz home dir
  - added M370 - X#Angle Y#Angle
  - G2/G3 commands support
