@@ -544,8 +544,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define HOMING_FEEDRATE {10*60, 10*60, 15*60, 0}  // set the homing speeds (mm/min)
 
 // default settings
-// Theory for xy(unit is a degree): stepperUnitsPerRevolution*driverMicrostepping*gearboxration/360, sscara (with drv8825 1/32) = 200*32*5/360 = 88.888
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {88.888,88.888,200,300}  // default steps per unit for SCARA
+// Theory for xy(unit is a degree): stepperUnitsPerRevolution*driverMicrostepping*gearboxration/360, sscara (with drv8825 1/32) = 200*32*4/360 = 71.11
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {71.11,71.11,200,300}  // default steps per unit for SCARA
 #define DEFAULT_MAX_FEEDRATE          {300, 300, 30, 70}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {3000,3000,200,1000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 

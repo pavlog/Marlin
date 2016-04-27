@@ -259,6 +259,8 @@ float _home_dir[3] = { X_HOME_DIR, Y_HOME_DIR, Z_HOME_DIR };
 
 bool axis_known_position[3] = {false, false, false};
 // 
+bool _min_software_endstops = min_software_endstops;
+bool _max_software_endstops = max_software_endstops;
 
 float zprobe_zoffset;
 
@@ -3488,6 +3490,10 @@ Sigma_Exit:
 		    {
 		      delta[Y_AXIS] = FBSIGN*code_value();
 		    }
+        bool bMinPrev = _min_software_endstops;
+        bool bMaxPrev = _max_software_endstops;
+        _min_software_endstops = false;
+        _max_software_endstops = false;
 		    calculate_SCARA_forward_Transform(delta);
 		    destination[X_AXIS] = delta[X_AXIS]/axis_scaling[X_AXIS];
 		    destination[Y_AXIS] = delta[Y_AXIS]/axis_scaling[Y_AXIS]; 
@@ -3497,6 +3503,8 @@ Sigma_Exit:
 		    SERIAL_ECHOLN("");
 		
 		  	prepare_move();
+        _min_software_endstops = bMinPrev;
+        _max_software_endstops = bMaxPrev;
 		  }
     break;
 	#endif
@@ -4127,7 +4135,7 @@ void get_arc_coordinates()
 
 void clamp_to_software_endstops(float target[3])
 {
-  if (min_software_endstops) {
+  if (_min_software_endstops) {
     if (target[X_AXIS] < min_pos[X_AXIS]) target[X_AXIS] = min_pos[X_AXIS];
     if (target[Y_AXIS] < min_pos[Y_AXIS]) target[Y_AXIS] = min_pos[Y_AXIS];
     
@@ -4140,7 +4148,7 @@ void clamp_to_software_endstops(float target[3])
     if (target[Z_AXIS] < min_pos[Z_AXIS]+negative_z_offset) target[Z_AXIS] = min_pos[Z_AXIS]+negative_z_offset;
   }
 
-  if (max_software_endstops) {
+  if (_max_software_endstops) {
     if (target[X_AXIS] > max_pos[X_AXIS]) target[X_AXIS] = max_pos[X_AXIS];
     if (target[Y_AXIS] > max_pos[Y_AXIS]) target[Y_AXIS] = max_pos[Y_AXIS];
     if (target[Z_AXIS] > max_pos[Z_AXIS]) target[Z_AXIS] = max_pos[Z_AXIS];
@@ -4463,57 +4471,35 @@ void calculate_SCARA_forward_Transform(float f_scara[3])
 
 void calcReverse(const float x,const  float y,const float l,const float L,const float l2,const float L2,const float dhalf,float& q11,float& q22)
 {
+
+#if defined(SCARA_TYPE) && (SCARA_TYPE==1)
+  static float SCARA_C2, SCARA_S2, SCARA_K1, SCARA_K2, SCARA_theta, SCARA_psi;
+  
+
+#if (_Linkage_1 == _Linkage_2)
+  SCARA_C2 = ((sq(x) + sq(y)) / (2 * (float)l2)) - 1;
+#else
+  SCARA_C2 =   ( sq(x) + sq(y) - (float)l2 - (float)L2 ) / (2*l*L);
+#endif
+  
+  SCARA_S2 = sqrt( 1 - sq(SCARA_C2) );
+  
+  SCARA_K1 = l + L * SCARA_C2;
+  SCARA_K2 = L * SCARA_S2;
+  
+  SCARA_theta = ( atan2(x,y)-atan2(SCARA_K1, SCARA_K2) ) * -1;
+  SCARA_psi   =   atan2(SCARA_S2,SCARA_C2);
+  
+  q11 = SCARA_theta;
+  q22 = (SCARA_theta + SCARA_psi);
+
+  q22-=M_PI;
+
+#else
   static float y2,x2,A,B,C,F,E,Det1,Det2,qq11,qq22;
 
   y2 = sq(y);
 
-#if defined(SCARA_TYPE) && (SCARA_TYPE==1)
-  x2 = sq(x);
-  A = -2.0f * l * x;
-  B = -2.0f * y * l;
-  C = x2 + y2 + l2 - L2;
-  Det1 = B * B - (C * C - A * A);
-  
-  qq11 = (-B - sqrt(Det1)) / (C - A);
-  q11 = 2 * atan(qq11);
-  
-  qq22 = (-B + sqrt(Det1)) / (C - A);
-  q22 = 2 * atan(qq22);
-
-  q22-=M_PI;
-
-  q22 = (q22<=0 && q22>=-M_PI) ? q22 : (2*M_PI+q22);
-  //q22 = fmod(q22+M_PI,2.0f*M_PI);
-  //if( q22<0 )
-  //  q22+=2.0f*M_PI;
-  //q22-=M_PI;
-
-
-// not required
-  //q11 = fmod(q11+M_PI,2.0f*M_PI);
-  //if( q11<0 )
-  //  q11+=2.0f*M_PI;
-  //q11-=M_PI;
-
-  //q11+=4*M_PI;
-  //q22+=4*M_PI;
-
-  //if( Det1<0 || Det2<0 )
-  /*
-  {
-      SERIAL_ECHOPGM(" x="); SERIAL_ECHO(x);
-      SERIAL_ECHOPGM(" y="); SERIAL_ECHO(y);
-      SERIAL_ECHOPGM(" Det1="); SERIAL_ECHO(Det1);
-      SERIAL_ECHOPGM(" Det2="); SERIAL_ECHO(Det2);
-      SERIAL_ECHOPGM(" q11="); SERIAL_ECHO(q11*180/M_PI);
-      SERIAL_ECHOPGM(" q22="); SERIAL_ECHOLN(q22*180/M_PI);
-  }
-  //  SERIAL_ECHOPGM(" cp="); SERIAL_ECHO(x); SERIAL_ECHO(y); SERIAL_ECHO(z); SERIAL_ECHOLN(e);
-  */
-
-
-
-#else
   static float xmdhalf,xpdhalf;
   xmdhalf = (x - dhalf);
   xpdhalf = (x + dhalf);
@@ -4654,7 +4640,7 @@ void calculate_delta(float cartesian[3])
 	
 
 #if (_Linkage_1 == _Linkage_2)
-	SCARA_C2 = ( ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) ) / (2 * (float)L1_2) );
+	SCARA_C2 = ((sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS])) / (2 * (float)L1_2)) - 1
 #else
 	SCARA_C2 =   ( sq(SCARA_pos[X_AXIS]) + sq(SCARA_pos[Y_AXIS]) - (float)L1_2 - (float)L2_2 ) / (2*_Linkage_1*_Linkage_2);
 #endif
