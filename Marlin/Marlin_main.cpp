@@ -2863,6 +2863,7 @@ Sigma_Exit:
         SERIAL_PROTOCOL(_L1_2);
         SERIAL_PROTOCOLPGM("sq(L2):");
         SERIAL_PROTOCOL(_L2_2);
+        SERIAL_PROTOCOLLN("");
 #endif
       break;
     case 120: // M120
