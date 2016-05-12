@@ -15,6 +15,11 @@
  - G2/G3 commands support
  - Fixed math for pure SCARA (2 arms)
 
+About FIVE_BAR or SCARA_TYPE 2
+It is suported, but it may be broken (i just left old code but some artifacts may appear)
+Last stable version with fivebar tested limited by changelist - 8e789cd9eb17dd5e8e8ee45dbc814715ddcb8e36 (11 Aug 2015)
+
+ 
 ## Release Branch
 
 The Release branch contains the latest tagged version of Marlin (currently 1.0.2 – January 2015). It also includes a version 1.0.1 (December 2014). Any version of Marlin before 1.0.1 (when we started tagging versions) can be collectively referred to as Marlin 1.0.0.
