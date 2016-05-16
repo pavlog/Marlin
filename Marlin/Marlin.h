@@ -185,7 +185,6 @@ extern float delta[3];
 #ifdef SCARA
 void calculate_delta(float cartesian[3]);
 void calculate_SCARA_forward_Transform(float f_scara[3]);
-extern float delta[3];
 #endif
 void prepare_move();
 void kill();
@@ -225,26 +224,12 @@ extern float delta_radius;
 extern float delta_diagonal_rod;
 extern float delta_segments_per_second;
 void recalc_delta_settings(float radius, float diagonal_rod);
-extern float destination[NUM_AXIS];
 #endif
 #ifdef SCARA
 extern float axis_scaling[3];  // Build size scaling
-extern float destination[NUM_AXIS];
-extern float _Linkage_1;
-extern float _Linkage_2;
-extern float _EndPointMountOffset;
-extern float _EndPointMountAngleRad;
-extern float _FiveBarAxesDist;
-extern float _L1_2;
-extern float _L2_2;
-extern float _scara_segments_per_second;
 #endif
 extern float min_pos[3];
 extern float max_pos[3];
-extern float _base_min_pos[3];
-extern float _base_max_pos[3];
-extern float _base_home_pos[3];
-extern float _home_dir[3];
 extern bool axis_known_position[3];
 extern float zprobe_zoffset;
 extern int fanSpeed;
@@ -288,6 +273,4 @@ extern void digipot_i2c_init();
 #endif
 
 extern void calculate_volumetric_multipliers();
-
-
 

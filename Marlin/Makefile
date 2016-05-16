@@ -12,14 +12,14 @@
 #
 # Detailed instructions for using the makefile:
 #
-#  1. Modify the line containg "ARDUINO_INSTALL_DIR" to point to the directory that
+#  1. Modify the line containing "ARDUINO_INSTALL_DIR" to point to the directory that
 #     contains the Arduino installation (for example, under Mac OS X, this
 #     might be /Applications/Arduino.app/Contents/Resources/Java).
 #
 #  2. Modify the line containing "UPLOAD_PORT" to refer to the filename
 #     representing the USB or serial connection to your Arduino board
 #     (e.g. UPLOAD_PORT = /dev/tty.USB0).  If the exact name of this file
-#     changes, you can use * as a wildcard (e.g. UPLOAD_PORT = /dev/tty.usb*).
+#     changes, you can use * as a wild card (e.g. UPLOAD_PORT = /dev/tty.usb*).
 #
 #  3. Set the line containing "MCU" to match your board's processor.
 #     Older one's are atmega8 based, newer ones like Arduino Mini, Bluetooth
@@ -36,11 +36,12 @@
 # Note that all settings are set with ?=, this means you can override them
 # from the commandline with "make HARDWARE_MOTHERBOARD=71" for example
 
-# This defined the board you are compiling for (see Configuration.h for the options)
+# This defined the board you are compiling for (see boards.h for the options)
 HARDWARE_MOTHERBOARD ?= 11
 
 # Arduino source install directory, and version number
-ARDUINO_INSTALL_DIR  ?= /Applications/Arduino.app/Contents/Resources/Java
+# On most linuxes this will be /usr/share/arduino
+ARDUINO_INSTALL_DIR  ?= /usr/share/arduino
 ARDUINO_VERSION      ?= 105
 
 # You can optionally set a path to the avr-gcc tools. Requires a trailing slash. (ex: /usr/local/avr-gcc/bin)
@@ -48,10 +49,12 @@ AVR_TOOLS_PATH ?=
 
 #Programmer configuration
 UPLOAD_RATE        ?= 115200
-AVRDUDE_PROGRAMMER ?= arduino
+AVRDUDE_PROGRAMMER ?= wiring
+# on most linuxes this will be /dev/ttyACM0 or /dev/ttyACM1 
 UPLOAD_PORT        ?= /dev/arduino
 
-#Directory used to build files in, contains all the build files, from object files to the final hex file.
+#Directory used to build files in, contains all the build files, from object files to the final hex file
+#on linux it is best to put an absolute path like /home/username/tmp .
 BUILD_DIR          ?= applet
 
 # This defines whether Liquid_TWI2 support will be built
@@ -95,12 +98,30 @@ MCU              ?= atmega2560
 else ifeq  ($(HARDWARE_MOTHERBOARD),34)
 HARDWARE_VARIANT ?= arduino
 MCU              ?= atmega2560
-
-#Duemilanove w/ ATMega328P pin assignment
-else ifeq  ($(HARDWARE_MOTHERBOARD),4)
+else ifeq  ($(HARDWARE_MOTHERBOARD),35)
 HARDWARE_VARIANT ?= arduino
-HARDWARE_SUB_VARIANT ?= standard
-MCU              ?= atmega328p
+MCU              ?= atmega2560
+else ifeq  ($(HARDWARE_MOTHERBOARD),36)
+HARDWARE_VARIANT ?= arduino
+MCU              ?= atmega2560
+else ifeq  ($(HARDWARE_MOTHERBOARD),38)
+HARDWARE_VARIANT ?= arduino
+MCU              ?= atmega2560
+else ifeq  ($(HARDWARE_MOTHERBOARD),43)
+HARDWARE_VARIANT ?= arduino
+MCU              ?= atmega2560
+else ifeq  ($(HARDWARE_MOTHERBOARD),44)
+HARDWARE_VARIANT ?= arduino
+MCU              ?= atmega2560
+else ifeq  ($(HARDWARE_MOTHERBOARD),45)
+HARDWARE_VARIANT ?= arduino
+MCU              ?= atmega2560
+else ifeq  ($(HARDWARE_MOTHERBOARD),46)
+HARDWARE_VARIANT ?= arduino
+MCU              ?= atmega2560
+else ifeq  ($(HARDWARE_MOTHERBOARD),48)
+HARDWARE_VARIANT ?= arduino
+MCU              ?= atmega2560
 
 #Gen6
 else ifeq  ($(HARDWARE_MOTHERBOARD),5)
@@ -140,6 +161,9 @@ else ifeq  ($(HARDWARE_MOTHERBOARD),8)
 HARDWARE_VARIANT ?= Teensy
 MCU              ?= at90usb1286
 else ifeq  ($(HARDWARE_MOTHERBOARD),81)
+HARDWARE_VARIANT ?= Teensy
+MCU              ?= at90usb1286
+else ifeq  ($(HARDWARE_MOTHERBOARD),811)
 HARDWARE_VARIANT ?= Teensy
 MCU              ?= at90usb1286
 else ifeq  ($(HARDWARE_MOTHERBOARD),82)
@@ -197,7 +221,7 @@ endif
 # Set to 16Mhz if not yet set.
 F_CPU ?= 16000000
 
-# Arduino containd the main source code for the Arduino
+# Arduino contained the main source code for the Arduino
 # Libraries, the "hardware variant" are for boards
 # that derives from that, and their source are present in
 # the main Marlin source directory
@@ -221,7 +245,7 @@ TARGET = $(notdir $(CURDIR))
 VPATH = .
 VPATH += $(BUILD_DIR)
 VPATH += $(HARDWARE_SRC)
-ifeq ($(HARDWARE_VARIANT), arduino)
+ifeq ($(HARDWARE_VARIANT), $(filter $(HARDWARE_VARIANT),arduino Teensy))
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/LiquidCrystal
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/SPI
 ifeq ($(LIQUID_TWI2), 1)
@@ -263,10 +287,10 @@ VPATH += $(ARDUINO_INSTALL_DIR)/hardware/teensy/cores/teensy
 endif
 CXXSRC = WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\
 	MarlinSerial.cpp Sd2Card.cpp SdBaseFile.cpp SdFatUtil.cpp	\
-	SdFile.cpp SdVolume.cpp motion_control.cpp planner.cpp		\
-	stepper.cpp temperature.cpp cardreader.cpp ConfigurationStore.cpp \
-	watchdog.cpp SPI.cpp Servo.cpp Tone.cpp ultralcd.cpp digipot_mcp4451.cpp \
-	vector_3.cpp qr_solve.cpp
+	SdFile.cpp SdVolume.cpp planner.cpp stepper.cpp \
+	temperature.cpp cardreader.cpp configuration_store.cpp \
+	watchdog.cpp SPI.cpp servo.cpp Tone.cpp ultralcd.cpp digipot_mcp4451.cpp \
+	dac_mcp4728.cpp vector_3.cpp qr_solve.cpp buzzer.cpp
 ifeq ($(LIQUID_TWI2), 0)
 CXXSRC += LiquidCrystal.cpp
 else
@@ -279,7 +303,7 @@ SRC += twi.c
 CXXSRC += Wire.cpp
 endif
 
-#Check for Arduino 1.0.0 or higher and use the correct sourcefiles for that version
+#Check for Arduino 1.0.0 or higher and use the correct source files for that version
 ifeq ($(shell [ $(ARDUINO_VERSION) -ge 100 ] && echo true), true)
 CXXSRC += main.cpp
 else
@@ -351,15 +375,15 @@ LDFLAGS = -lm
 
 # Programming support using avrdude. Settings and variables.
 AVRDUDE_PORT = $(UPLOAD_PORT)
-AVRDUDE_WRITE_FLASH = -U flash:w:$(BUILD_DIR)/$(TARGET).hex:i
+AVRDUDE_WRITE_FLASH = -Uflash:w:$(BUILD_DIR)/$(TARGET).hex:i
 ifeq ($(shell uname -s), Linux)
-AVRDUDE_CONF = $(ARDUINO_INSTALL_DIR)/hardware/tools/avrdude.conf
+AVRDUDE_CONF = /etc/avrdude/avrdude.conf
 else
 AVRDUDE_CONF = $(ARDUINO_INSTALL_DIR)/hardware/tools/avr/etc/avrdude.conf
 endif
-AVRDUDE_FLAGS = -D -C $(AVRDUDE_CONF) \
-	-p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) \
-	-b $(UPLOAD_RATE)
+AVRDUDE_FLAGS = -D -C$(AVRDUDE_CONF) \
+	-p$(MCU) -P$(AVRDUDE_PORT) -c$(AVRDUDE_PROGRAMMER) \
+	-b$(UPLOAD_RATE)
 
 # Define all object files.
 OBJ = ${patsubst %.c, $(BUILD_DIR)/%.o, ${SRC}}
@@ -400,7 +424,7 @@ lss: $(BUILD_DIR)/$(TARGET).lss
 sym: $(BUILD_DIR)/$(TARGET).sym
 
 # Program the device.
-# Do not try to reset an arduino if it's not one
+# Do not try to reset an Arduino if it's not one
 upload: $(BUILD_DIR)/$(TARGET).hex
 ifeq (${AVRDUDE_PROGRAMMER}, arduino)
 	stty hup < $(UPLOAD_PORT); true
