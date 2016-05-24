@@ -307,7 +307,7 @@ SERIAL_ECHOLNPGM("Scaling factors:");
 
     #ifdef SCARA
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Scara options: X#Linkage1 YLinkage2 O#EndPointMountOffset A#EndPointMountAnglr D#FiveBarAxisDistances ");
+    SERIAL_ECHOLNPGM("Scara options: X#Linkage1 YLinkage2 O#EndPointMountOffset A#EndPointMountAnglr D#FiveBarAxisDistances S#scara_segments_per_second ");
     SERIAL_ECHO_START;
     SERIAL_ECHOPAIR("  M453 X",_Linkage_1 );
     SERIAL_ECHOPAIR(" Y" ,_Linkage_2 );
