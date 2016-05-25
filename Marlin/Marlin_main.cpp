@@ -212,7 +212,9 @@
  * M503 - Print the current settings (from memory not from EEPROM). Use S0 to leave off headings.
  * M540 - Use S[0|1] to enable or disable the stop SD card print on endstop hit (requires ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED)
  * M600 - Pause for filament change X[pos] Y[pos] Z[relative lift] E[initial retract] L[later retract distance for removal]
- * M665 - Set delta configurations: L<diagonal rod> R<delta radius> S<segments/s>
+ * M665 - 
+ *        DELTA - Set delta configurations: L<diagonal rod> R<delta radius> S<segments/s>
+ *        DELTAXY - Set deltaxy configurations A<ArmAX> B<ArmBX> L<ArmALen> M<ArmBLen> O<ArmAMountOffsetLen> P<ArmAMountOffsetAngle> S<segments_per_sec>
  * M666 - Set delta endstop adjustment
  * M605 - Set dual x-carriage movement mode: S<mode> [ X<duplication x-offset> R<duplication temp offset> ]
  * M907 - Set digital trimpot motor current using axis codes.
@@ -332,6 +334,9 @@ const char* queued_commands_P = NULL;
 
 const int sensitive_pins[] = SENSITIVE_PINS; ///< Sensitive pin list for M42
 
+bool _min_software_endstops = min_software_endstops;
+bool _max_software_endstops = max_software_endstops;
+
 // Inactivity shutdown
 millis_t previous_cmd_ms = 0;
 static millis_t max_inactive_time = 0;
@@ -439,24 +444,34 @@ static uint8_t target_extruder;
   static bool home_all_axis = true;
 #endif
 
+#if ENABLED(DELTAXY)
+  float delta_segments_per_second = DELTAXY_SEGMENTS_PER_SECOND;
+  float delta[3] = { 0 };
+  float deltaxy_armax = DELTAXY_ARMAX;
+  float deltaxy_armbx = DELTAXY_ARMBX;
+  float deltaxy_armal = DELTAXY_ARMALEN;
+  float deltaxy_armbl = DELTAXY_ARMBLEN;
+  float deltaxy_arma_mountLen = DELTAXY_ARMA_MOUNT_OFFSET;
+  float deltaxy_arma_mountAngle = DELTAXY_ARMA_MOUNT_ANGLE/DELTAXY_RAD2DEG;
+  float deltaxy_EX = DELTAXY_ARMA_MOUNT_OFFSET*cos(DELTAXY_ARMA_MOUNT_ANGLE/DELTAXY_RAD2DEG)+DELTAXY_ARMALEN;
+  float deltaxy_EY = DELTAXY_ARMA_MOUNT_OFFSET*sin(DELTAXY_ARMA_MOUNT_ANGLE/DELTAXY_RAD2DEG);
+  float deltaxy_lHp2 = (deltaxy_EX)*(deltaxy_EX)+deltaxy_EY*deltaxy_EY;
+  float deltaxy_lH = sqrt(deltaxy_lHp2);
+#endif
+
 #if ENABLED(SCARA)
   float delta_segments_per_second = SCARA_SEGMENTS_PER_SECOND;
   static float delta[3] = { 0 };
   float axis_scaling[3] = { 1, 1, 1 };    // Build size scaling, default to 1
-#endif
-
-#ifdef SCARA                              // Build size scaling
-float axis_scaling[3]={1,1,1};  // Build size scaling, default to 1
-#define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
-float _Linkage_1 = Linkage_1;
-float _Linkage_2 = Linkage_2;
-float _EndPointMountOffset = EndPointMountOffset;
-float _EndPointMountAngleRad = EndPointMountAngle/SCARA_RAD2DEG;
-float _FiveBarAxesDist = FiveBarAxesDist;
-//some helper variables to make kinematics faster
-float _L1_2 = sq(Linkage_1);
-float _L2_2 = sq(Linkage_2);
-float _scara_segments_per_second = scara_segments_per_second;
+  #define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
+  float _Linkage_1 = Linkage_1;
+  float _Linkage_2 = Linkage_2;
+  float _EndPointMountOffset = EndPointMountOffset;
+  float _EndPointMountAngleRad = EndPointMountAngle/SCARA_RAD2DEG;
+  float _FiveBarAxesDist = FiveBarAxesDist;
+  //some helper variables to make kinematics faster
+  float _L1_2 = sq(Linkage_1);
+  float _L2_2 = sq(Linkage_2);
 #endif				
 
 #if ENABLED(FILAMENT_WIDTH_SENSOR)
@@ -550,7 +565,7 @@ void gcode_M114();
   #define DEBUG_POS(PREFIX,VAR) do{ SERIAL_ECHOPGM(PREFIX); print_xyz(" > " STRINGIFY(VAR), VAR); }while(0)
 #endif
 
-#if ENABLED(DELTA) || ENABLED(SCARA)
+#if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(DELTAXY)
   inline void sync_plan_position_delta() {
     #if ENABLED(DEBUG_LEVELING_FEATURE)
       if (DEBUGGING(LEVELING)) DEBUG_POS("sync_plan_position_delta", current_position);
@@ -767,16 +782,16 @@ void servo_init() {
  *  - Print startup messages and diagnostics
  *  - Get EEPROM or default settings
  *  - Initialize managers for:
- *    • temperature
- *    • planner
- *    • watchdog
- *    • stepper
- *    • photo pin
- *    • servos
- *    • LCD controller
- *    • Digipot I2C
- *    • Z probe sled
- *    • status LEDs
+ *    ï¿½ temperature
+ *    ï¿½ planner
+ *    ï¿½ watchdog
+ *    ï¿½ stepper
+ *    ï¿½ photo pin
+ *    ï¿½ servos
+ *    ï¿½ LCD controller
+ *    ï¿½ Digipot I2C
+ *    ï¿½ Z probe sled
+ *    ï¿½ status LEDs
  */
 void setup() {
 
@@ -839,7 +854,7 @@ void setup() {
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
 
-  #if ENABLED(DELTA) || ENABLED(SCARA)
+  #if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(DELTAXY)
     // Vital to init kinematic equivalent for X0 Y0 Z0
     sync_plan_position_delta();
   #endif
@@ -1356,13 +1371,11 @@ static void set_axis_is_at_home(AxisEnum axis) {
 
   #if ENABLED(SCARA)
 
-    if (axis == X_AXIS || axis == Y_AXIS) {
+    if (axis == X_AXIS || axis == Y_AXIS) 
+    {
 
       float homeposition[3];
-   char i;
-
-   if (axis < 2)
-   {
+      char i;
 
      for (i=0; i<3; i++)
      {
@@ -1411,19 +1424,57 @@ static void set_axis_is_at_home(AxisEnum axis) {
     }
     else
   #endif
+#if ENABLED(DELTAXY)
+
+    if (axis == X_AXIS || axis == Y_AXIS) 
+    {
+      float homeposition[3];
+       char i;
+
+       for (i=0; i<3; i++)
+       {
+          homeposition[i] = base_home_pos(i); 
+       }  
+        // SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
+        // SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
+        // Works out real Homeposition angles using inverse kinematics, 
+        // and calculates homing offset using forward kinematics
+        calculate_delta(homeposition);
+  
+        // SERIAL_ECHOPGM("addhome X="); SERIAL_ECHO(add_homing[X_AXIS]);
+        // SERIAL_ECHOPGM(" addhome Y="); SERIAL_ECHO(add_homing[Y_AXIS]);
+        // SERIAL_ECHOPGM(" addhome Theta="); SERIAL_ECHO(delta[X_AXIS]);
+        // SERIAL_ECHOPGM(" addhome Psi+Theta="); SERIAL_ECHOLN(delta[Y_AXIS]);
+  
+        calculate_DeltaXY_forward_Transform(delta);
+  
+        // SERIAL_ECHOPGM("Delta X="); SERIAL_ECHO(delta[X_AXIS]);
+        // SERIAL_ECHOPGM(" Delta Y="); SERIAL_ECHOLN(delta[Y_AXIS]);
+  
+        current_position[axis] = delta[axis];
+  
+        // SCARA home positions are based on configuration since the actual limits are determined by the 
+        // inverse kinematic transform.
+        sw_endstop_min[axis] = base_min_pos(axis); // + (delta[axis] - base_home_pos(axis));
+        sw_endstop_max[axis] = base_max_pos(axis); // + (delta[axis] - base_home_pos(axis));
+      }
+    else
+  #endif
   {
     current_position[axis] = base_home_pos(axis) + home_offset[axis];
     update_software_endstops(axis);
 
-    #if ENABLED(AUTO_BED_LEVELING_FEATURE) && _home_dir[Z_AXIS] < 0
-      if (axis == Z_AXIS) {
-        current_position[Z_AXIS] -= zprobe_zoffset;
-        #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (DEBUGGING(LEVELING)) {
-            SERIAL_ECHOPAIR("> zprobe_zoffset==", zprobe_zoffset);
-            SERIAL_EOL;
-          }
-        #endif
+    #if ENABLED(AUTO_BED_LEVELING_FEATURE)
+      if( _home_dir[Z_AXIS] < 0 )
+        if (axis == Z_AXIS) {
+          current_position[Z_AXIS] -= zprobe_zoffset;
+          #if ENABLED(DEBUG_LEVELING_FEATURE)
+            if (DEBUGGING(LEVELING)) {
+              SERIAL_ECHOPAIR("> zprobe_zoffset==", zprobe_zoffset);
+              SERIAL_EOL;
+            }
+          #endif
+        }
       }
     #endif
 
@@ -2752,7 +2803,7 @@ inline void gcode_G28() {
 
         current_position[X_AXIS] = destination[X_AXIS];
         current_position[Y_AXIS] = destination[Y_AXIS];
-        #if DISABLED(SCARA)
+        #if DISABLED(SCARA) || DISABLED(DELTAXY)
           current_position[Z_AXIS] = destination[Z_AXIS];
         #endif
 
@@ -2911,6 +2962,10 @@ inline void gcode_G28() {
   #endif // else DELTA
 
   #if ENABLED(SCARA)
+    sync_plan_position_delta();
+  #endif
+
+  #if ENABLED(DELTAXY)
     sync_plan_position_delta();
   #endif
 
@@ -3728,7 +3783,7 @@ inline void gcode_G92() {
     }
   }
   if (didXYZ) {
-    #if ENABLED(DELTA) || ENABLED(SCARA)
+    #if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(DELTAXY)
       sync_plan_position_delta();
     #else
       sync_plan_position();
@@ -5253,7 +5308,7 @@ inline void gcode_M204() {
  *
  *    S = Min Feed Rate (mm/s)
  *    T = Min Travel Feed Rate (mm/s)
- *    B = Min Segment Time (µs)
+ *    B = Min Segment Time (ï¿½s)
  *    X = Max XY Jerk (mm/s/s)
  *    Z = Max Z Jerk (mm/s/s)
  *    E = Max E Jerk (mm/s/s)
@@ -5281,6 +5336,21 @@ inline void gcode_M206() {
   #endif
   sync_plan_position();
 }
+
+#if ENABLED(DELTAXY)
+  //M665 set deltaxy configurations A<ArmAX> B<ArmBX> L<ArmALen> M<ArmBLen> O<ArmAMountOffsetLen> P<ArmAMountOffsetAngle> S<segments_per_sec>
+  inline void gcode_M665() 
+  {
+    if (code_seen('A')) deltaxy_armax = code_value();
+    if (code_seen('B')) deltaxy_armbx = code_value();
+    if (code_seen('L')) deltaxy_armal = code_value();
+    if (code_seen('M')) deltaxy_armbl = code_value();
+    if (code_seen('O')) deltaxy_arma_mountLen = code_value();
+    if (code_seen('P')) deltaxy_arma_mountAngle = code_value()/DELTAXY_RAD2DEG;
+    if (code_seen('S')) delta_segments_per_second = code_value();
+    recalc_deltaxy_settings();
+  }
+#endif //DELTAXY  
 
 #if ENABLED(DELTA)
   /**
@@ -6933,6 +7003,12 @@ void process_next_command() {
           break;
       #endif
 
+      #if ENABLED(DELTAXY)
+        case 665: // M665 set deltaxy configurations A<ArmAX> B<ArmBX> L<ArmALen> M<ArmBLen> O<ArmAMountOffsetLen> P<ArmAMountOffsetAngle> S<segments_per_sec>
+          gcode_M665();
+          break;
+      #endif
+
       #if ENABLED(DELTA) || ENABLED(Z_DUAL_ENDSTOPS)
         case 666: // M666 set delta / dual endstop adjustment
           gcode_M666();
@@ -7190,7 +7266,7 @@ void process_next_command() {
         if(code_seen('O')) _EndPointMountOffset = code_value();
         if(code_seen('A')) _EndPointMountAngleRad = code_value()/SCARA_RAD2DEG;
         if(code_seen('D')) _FiveBarAxesDist = code_value();
-        if(code_seen('S')) _scara_segments_per_second = code_value();
+        if(code_seen('S')) scara_segments_per_second = code_value();
       }
       break;
      #endif
@@ -7462,7 +7538,7 @@ void mesh_plan_buffer_line(float x, float y, float z, const float e, float feed_
 
 #endif // PREVENT_DANGEROUS_EXTRUDE
 
-#if ENABLED(DELTA) || ENABLED(SCARA)
+#if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(DELTAXY)
 
   inline bool prepare_move_delta(float target[NUM_AXIS]) {
     float difference[NUM_AXIS];
@@ -7473,7 +7549,7 @@ void mesh_plan_buffer_line(float x, float y, float z, const float e, float feed_
     if (cartesian_mm < 0.000001) return false;
     float seconds = 6000 * cartesian_mm / feedrate / feedrate_multiplier;
     int steps = max(1, int(delta_segments_per_second * seconds));
-
+    
     // SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
     // SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
     // SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
@@ -7507,6 +7583,10 @@ void mesh_plan_buffer_line(float x, float y, float z, const float e, float feed_
 
 #if ENABLED(SCARA)
   inline bool prepare_move_scara(float target[NUM_AXIS]) { return prepare_move_delta(target); }
+#endif
+
+#if ENABLED(DELTAXY)
+  inline bool prepare_move_deltaxy(float target[NUM_AXIS]) { return prepare_move_delta(target); }
 #endif
 
 #if ENABLED(DUAL_X_CARRIAGE)
@@ -7584,6 +7664,8 @@ void prepare_move() {
 
   #if ENABLED(SCARA)
     if (!prepare_move_scara(destination)) return;
+  #elif ENABLED(DELTAXY)
+    if (!prepare_move_deltaxy(destination)) return;
   #elif ENABLED(DELTA)
     if (!prepare_move_delta(destination)) return;
   #endif
@@ -7592,7 +7674,7 @@ void prepare_move() {
     if (!prepare_move_dual_x_carriage()) return;
   #endif
 
-  #if DISABLED(DELTA) && DISABLED(SCARA)
+  #if DISABLED(DELTA) && DISABLED(SCARA) && DISABLED(DELTAXY)
     if (!prepare_move_cartesian()) return;
   #endif
 
@@ -7713,7 +7795,7 @@ void plan_arc(
 
     clamp_to_software_endstops(arc_target);
 
-    #if ENABLED(DELTA) || ENABLED(SCARA)
+    #if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(DELTAXY)
       calculate_delta(arc_target);
       #if ENABLED(AUTO_BED_LEVELING_FEATURE)
         adjust_delta(arc_target);
@@ -7725,7 +7807,7 @@ void plan_arc(
   }
 
   // Ensure last segment arrives at target location.
-  #if ENABLED(DELTA) || ENABLED(SCARA)
+  #if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(DELTAXY)
     calculate_delta(target);
     #if ENABLED(AUTO_BED_LEVELING_FEATURE)
       adjust_delta(target);
@@ -8079,6 +8161,192 @@ void calcReverse(const float x,const  float y,const float l,const float L,const 
   }
 
 #endif // SCARA
+
+#if ENABLED(DELTAXY)
+
+void recalc_deltaxy_settings() 
+{
+    deltaxy_EX = deltaxy_arma_mountLen*cos(deltaxy_arma_mountAngle)+deltaxy_armal;
+    deltaxy_EY = deltaxy_arma_mountLen*sin(deltaxy_arma_mountAngle);
+    deltaxy_lHp2 = (deltaxy_EX)*(deltaxy_EX)+deltaxy_EY*deltaxy_EY;
+    deltaxy_lH = sqrt(deltaxy_lHp2);
+
+}
+
+void cal_delta(float tx,float ty,float la,float lb,float ax,float bx,float ay,float& by)
+{
+    float ba = (ax-tx);
+    float BA=-2*ty;
+    float CA = ty*ty+ba*ba-la*la;
+    float DA = BA*BA-4*CA;
+    ay=(-BA-sqrt(DA))/2;
+
+    float bb = (bx-tx);
+    float BB=-2*ty;
+    float CB = ty*ty+bb*bb-lb*lb;
+    float DB = BB*BB-4*CB;
+    by=(-BB-sqrt(DB))/2;
+}
+
+float cal_delta_a_only(float tx,float ty,float la,float ax)
+{
+    float ba = (ax-tx);
+    float BA=-2*ty;
+    float CA = ty*ty+ba*ba-la*la;
+    float DA = BA*BA-4*CA;
+    return (-BA-sqrt(DA))/2;
+}
+
+void circle_circle_intersection(float x0,float y0,float r0,
+                               float x1,float y1,float r1,float d,float& xi,float& yi)
+{
+  //var a, dx, dy, d, h, rx, ry;
+  //var x2, y2;
+
+  /* dx and dy are the vertical and horizontal distances between
+   * the circle centers.
+   */
+  float dx = x1 - x0;
+  //  out("x1",x1);
+
+  float dy = y1 - y0;
+  //  out("dx",dx);
+
+  /* Determine the straight-line distance between the centers. */
+  //var d = Math.sqrt((dy*dy) + (dx*dx));
+  //d = hypot(dx,dy); // Suggested by Keith Briggs
+  //out("d",d);
+
+  /* Check for solvability. */
+  //if (d > (r0 + r1))
+  //{
+   // /* no solution. circles do not intersect. */
+   // return 0;
+  //}
+  //if (d < fabs(r0 - r1))
+  //{
+   // /* no solution. one circle is contained in the other */
+   // return 0;
+  //}
+
+  /* 'point 2' is the point where the line through the circle
+   * intersection points crosses the line between the circle
+   * centers.  
+   */
+
+  /* Determine the distance from point 0 to point 2. */
+  float a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
+  //out("a",a);
+
+  /* Determine the coordinates of point 2. */
+  float x2 = x0 + (dx * a/d);
+  float y2 = y0 + (dy * a/d);
+
+
+  /* Determine the distance from point 2 to either of the
+   * intersection points.
+   */
+  float h = sqrt((r0*r0) - (a*a));
+
+  //out("h",h);
+
+  /* Now determine the offsets of the intersection points from
+   * point 2.
+   */
+  float rx = -dy * (h/d);
+  float ry = dx * (h/d);
+
+  //out("rx",rx);
+  //out("ry",ry);
+  /* Determine the absolute intersection points. */
+
+  xi = x2 + rx;
+  yi = y2 + ry;
+}
+
+
+void calculate_DeltaXY_forward_Transform(float f_scara[3]) 
+{
+    // Perform forward kinematics, and place results in delta[3]
+    float ax = deltaxy_armax;
+    float bx = deltaxy_armbx;
+    float ay = f_scara[0];
+    float by = f_scara[1];
+    float la = deltaxy_armal;
+    float lb = deltaxy_armbl;
+    float offset = deltaxy_arma_mountLen;
+    float angleRad = deltaxy_arma_mountAngle;
+//function cal_forward(ay,by,la,lb,ax,bx,offset,angleRad)
+    float dabx = (ax-bx);
+    float daby = (ay-by);
+    float RAB = sqrt(dabx*dabx+daby*daby);
+    //out("RAB",RAB);
+    float xi,yi;
+    circle_circle_intersection(ax,ay,la,bx,by,lb,RAB,xi,yi);
+    //out("res.xi",res.xi);
+  
+    float dx = (xi-ax);
+    float dy = (yi-ay);
+    //out("dx",dx);
+    //out("dy",dy);
+    float angleTx = atan2(dy/la,dx/la);
+    //out("angleTx",angleTx);
+    //out("EX",EX);
+    //out("EY",EY);
+//    var tx = ax+Math.atan2((res.yi-ay)/la,(res.xi-ax)/la);
+    float x = ax+deltaxy_EX*cos(angleTx)-deltaxy_EY*sin(angleTx);
+    //out("X",x);
+    float y = ay+deltaxy_EX*sin(angleTx)+deltaxy_EY*cos(angleTx);
+    //
+     delta[X_AXIS] = x;
+     delta[Y_AXIS] = y;
+}
+
+void calculate_delta(float cartesian[3]) 
+{
+    //reverse kinematics.
+    // Perform reversed kinematics, and place results in delta[3]
+
+    float ax = deltaxy_armax;
+    float bx = deltaxy_armbx;
+    float la = deltaxy_armal;
+    float lb = deltaxy_armbl;
+
+    //
+    
+    float ay,by;
+    //var tx1 = tx;
+    //var ty1 = ty;
+    ay = cal_delta_a_only(cartesian[0],cartesian[1],deltaxy_lH,ax);
+    circle_circle_intersection(cartesian[0],cartesian[1],deltaxy_arma_mountLen,ax,ay,la,deltaxy_lH,cartesian[0],cartesian[1]);
+    cal_delta(cartesian[0],cartesian[1],la,lb,ax,bx,ay,by);
+
+  delta[X_AXIS] = ay;
+  delta[Y_AXIS] = by;
+
+    delta[Z_AXIS] = cartesian[Z_AXIS];
+
+    /**
+    SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
+    SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
+    SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
+
+    SERIAL_ECHOPGM("scara x="); SERIAL_ECHO(SCARA_pos[X_AXIS]);
+    SERIAL_ECHOPGM(" y="); SERIAL_ECHOLN(SCARA_pos[Y_AXIS]);
+
+    SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
+    SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+    SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
+
+    SERIAL_ECHOPGM("C2="); SERIAL_ECHO(SCARA_C2);
+    SERIAL_ECHOPGM(" S2="); SERIAL_ECHO(SCARA_S2);
+    SERIAL_ECHOPGM(" Theta="); SERIAL_ECHO(SCARA_theta);
+    SERIAL_ECHOPGM(" Psi="); SERIAL_ECHOLN(SCARA_psi);
+    SERIAL_EOL;
+    */
+  }
+
+#endif // DELTAXY
 
 #if ENABLED(TEMP_STAT_LEDS)
 

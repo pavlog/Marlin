@@ -125,6 +125,8 @@
  * M452 - xyz home pos
  * M454 - xyz home dir
  *
+ * DELTAXY:
+ * M665 set deltaxy configurations A<ArmAX> B<ArmBX> L<ArmALen> M<ArmBLen> O<ArmAMountOffsetLen> P<ArmAMountOffsetAngle> S<segments_per_sec>
  */
 #include "Marlin.h"
 #include "language.h"
@@ -340,8 +342,20 @@ void Config_StoreSettings()  {
     EEPROM_WRITE_VAR(i,_EndPointMountOffset);
     EEPROM_WRITE_VAR(i,_EndPointMountAngleRad);
     EEPROM_WRITE_VAR(i,_FiveBarAxesDist);
-    EEPROM_WRITE_VAR(i,_scara_segments_per_second);
+    EEPROM_WRITE_VAR(i,delta_segments_per_second);
   #endif
+
+  #if ENABLED(DELTAXY)
+    EEPROM_WRITE_VAR(i, deltaxy_armax);                   // 1 float
+    EEPROM_WRITE_VAR(i, deltaxy_armbx);              // 1 float
+    EEPROM_WRITE_VAR(i, deltaxy_armal);        // 1 float
+    EEPROM_WRITE_VAR(i, deltaxy_armbl);        // 1 float
+    EEPROM_WRITE_VAR(i, deltaxy_arma_mountLen);        // 1 float
+    float angleDeg = deltaxy_arma_mountAngle*DELTAXY_RAD2DEG;
+    EEPROM_WRITE_VAR(i, angleDeg);        // 1 float
+    EEPROM_WRITE_VAR(i, delta_segments_per_second); // 1 float
+  #endif
+
 
   char ver2[4] = EEPROM_VERSION;
   int j = EEPROM_OFFSET;
@@ -539,6 +553,19 @@ void Config_RetrieveSettings() {
 	_L2_2 = sq(_Linkage_2);
 #endif
 
+  #if ENABLED(DELTAXY)
+    EEPROM_READ_VAR(i, deltaxy_armax);                   // 1 float
+    EEPROM_READ_VAR(i, deltaxy_armbx);              // 1 float
+    EEPROM_READ_VAR(i, deltaxy_armal);        // 1 float
+    EEPROM_READ_VAR(i, deltaxy_armbl);        // 1 float
+    EEPROM_READ_VAR(i, deltaxy_arma_mountLen);        // 1 float
+    EEPROM_READ_VAR(i, deltaxy_arma_mountAngle);        // 1 float
+    EEPROM_READ_VAR(i, delta_segments_per_second); // 1 float
+    deltaxy_arma_mountAngle=deltaxy_arma_mountAngle/DELTAXY_RAD2DEG;
+    recalc_deltaxy_settings();
+  #endif
+
+
     calculate_volumetric_multipliers();
     // Call updatePID (similar to when we have processed M301)
     updatePID();
@@ -608,6 +635,17 @@ void Config_ResetDefault() {
     recalc_delta_settings(delta_radius, delta_diagonal_rod);
   #elif ENABLED(Z_DUAL_ENDSTOPS)
     z_endstop_adj = 0;
+  #endif
+
+  #if ENABLED(DELTAXY)
+    delta_segments_per_second = DELTAXY_SEGMENTS_PER_SECOND;
+    deltaxy_armax = DELTAXY_ARMAX;
+    deltaxy_armbx = DELTAXY_ARMBX;
+    deltaxy_armal = DELTAXY_ARMALEN;
+    deltaxy_armbl = DELTAXY_ARMBLEN;
+    deltaxy_arma_mountLen = DELTAXY_ARMA_MOUNT_OFFSET;
+    deltaxy_arma_mountAngle = DELTAXY_ARMA_MOUNT_ANGLE/DELTAXY_RAD2DEG;
+    recalc_deltaxy_settings();
   #endif
 
   #if ENABLED(ULTIPANEL)
@@ -1045,6 +1083,18 @@ void Config_PrintSettings(bool forReplay) {
     SERIAL_ECHOPAIR(" D" ,_FiveBarAxesDist );
     SERIAL_ECHOPAIR(" S" ,_scara_segments_per_second );
     SERIAL_ECHOLN("");
+    #endif
+
+    #if ENABLED(DELTAXY)
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("DELTAXY setings: A<ArmAX> B<ArmBX> L<ArmALen> M<ArmBLen> O<ArmAMountOffsetLen> P<ArmAMountOffsetAngle> S<segments_per_sec>");
+      SERIAL_ECHOPAIR("  M665 A",deltaxy_armax );
+      SERIAL_ECHOPAIR(" B" ,deltaxy_armbx );
+      SERIAL_ECHOPAIR(" L" ,deltaxy_armal );
+      SERIAL_ECHOPAIR(" M" ,deltaxy_armbl );
+      SERIAL_ECHOPAIR(" O" ,deltaxy_arma_mountLen );
+      SERIAL_ECHOPAIR(" P" ,deltaxy_arma_mountAngle*DELTAXY_RAD2DEG );
+      SERIAL_ECHOLN("");
     #endif
 
     SERIAL_ECHO_START;
