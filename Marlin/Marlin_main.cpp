@@ -1435,8 +1435,9 @@ static void set_axis_is_at_home(AxisEnum axis) {
        {
           homeposition[i] = base_home_pos(i); 
        }  
-        // SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
-        // SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
+        SERIAL_ECHOPGM("DeltaXY homing ");
+        SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
+        SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
         // Works out real Homeposition angles using inverse kinematics, 
         // and calculates homing offset using forward kinematics
         calculate_delta(homeposition);
@@ -7796,6 +7797,7 @@ void plan_arc(
     clamp_to_software_endstops(arc_target);
 
     #if ENABLED(DELTA) || ENABLED(SCARA) || ENABLED(DELTAXY)
+
       calculate_delta(arc_target);
       #if ENABLED(AUTO_BED_LEVELING_FEATURE)
         adjust_delta(arc_target);
@@ -8265,86 +8267,91 @@ void circle_circle_intersection(float x0,float y0,float r0,
 }
 
 
-void calculate_DeltaXY_forward_Transform(float f_scara[3]) 
+void calculate_DeltaXY_forward_Transform(float f_delta[3]) 
 {
-    // Perform forward kinematics, and place results in delta[3]
-    float ax = deltaxy_armax;
-    float bx = deltaxy_armbx;
-    float ay = f_scara[0];
-    float by = f_scara[1];
-    float la = deltaxy_armal;
-    float lb = deltaxy_armbl;
-    float offset = deltaxy_arma_mountLen;
-    float angleRad = deltaxy_arma_mountAngle;
-//function cal_forward(ay,by,la,lb,ax,bx,offset,angleRad)
-    float dabx = (ax-bx);
-    float daby = (ay-by);
-    float RAB = sqrt(dabx*dabx+daby*daby);
-    //out("RAB",RAB);
-    float xi,yi;
-    circle_circle_intersection(ax,ay,la,bx,by,lb,RAB,xi,yi);
-    //out("res.xi",res.xi);
+  // Perform forward kinematics, and place cartesian results in delta[3]
+  float ax = deltaxy_armax;
+  float bx = deltaxy_armbx;
+  float ay = f_delta[0];
+  float by = f_delta[1];
+  float la = deltaxy_armal;
+  float lb = deltaxy_armbl;
+  float offset = deltaxy_arma_mountLen;
+  float angleRad = deltaxy_arma_mountAngle;
+  //function cal_forward(ay,by,la,lb,ax,bx,offset,angleRad)
+  float dabx = (ax-bx);
+  float daby = (ay-by);
+  float RAB = sqrt(dabx*dabx+daby*daby);
+  //out("RAB",RAB);
+  float xi,yi;
+  circle_circle_intersection(ax,ay,la,bx,by,lb,RAB,xi,yi);
+  //out("res.xi",res.xi);
   
-    float dx = (xi-ax);
-    float dy = (yi-ay);
-    //out("dx",dx);
-    //out("dy",dy);
-    float angleTx = atan2(dy/la,dx/la);
-    //out("angleTx",angleTx);
-    //out("EX",EX);
-    //out("EY",EY);
-//    var tx = ax+Math.atan2((res.yi-ay)/la,(res.xi-ax)/la);
-    float x = ax+deltaxy_EX*cos(angleTx)-deltaxy_EY*sin(angleTx);
-    //out("X",x);
-    float y = ay+deltaxy_EX*sin(angleTx)+deltaxy_EY*cos(angleTx);
-    //
-     delta[X_AXIS] = x;
-     delta[Y_AXIS] = y;
+  float dx = (xi-ax);
+  float dy = (yi-ay);
+  //out("dx",dx);
+  //out("dy",dy);
+  float angleTx = atan2(dy/la,dx/la);
+  //out("angleTx",angleTx);
+  //out("EX",EX);
+  //out("EY",EY);
+  //    var tx = ax+Math.atan2((res.yi-ay)/la,(res.xi-ax)/la);
+  float x = ax+deltaxy_EX*cos(angleTx)-deltaxy_EY*sin(angleTx);
+  //out("X",x);
+  float y = ay+deltaxy_EX*sin(angleTx)+deltaxy_EY*cos(angleTx);
+  //
+  delta[X_AXIS] = x;
+  delta[Y_AXIS] = y;
+  //
+  SERIAL_ECHOPGM("DELTAXY forward");
+  SERIAL_EOL;
+  
+  SERIAL_ECHOPGM("delta ay="); SERIAL_ECHO(f_delta[X_AXIS]);
+  SERIAL_ECHOPGM(" by="); SERIAL_ECHO(f_delta[Y_AXIS]);
+  SERIAL_EOL;
+  
+  SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(delta[X_AXIS]);
+  SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+  SERIAL_EOL;
 }
 
 void calculate_delta(float cartesian[3]) 
 {
-    //reverse kinematics.
-    // Perform reversed kinematics, and place results in delta[3]
-
-    float ax = deltaxy_armax;
-    float bx = deltaxy_armbx;
-    float la = deltaxy_armal;
-    float lb = deltaxy_armbl;
-
-    //
-    
-    float ay,by;
-    //var tx1 = tx;
-    //var ty1 = ty;
-    ay = cal_delta_a_only(cartesian[0],cartesian[1],deltaxy_lH,ax);
-    circle_circle_intersection(cartesian[0],cartesian[1],deltaxy_arma_mountLen,ax,ay,la,deltaxy_lH,cartesian[0],cartesian[1]);
-    cal_delta(cartesian[0],cartesian[1],la,lb,ax,bx,ay,by);
-
+  //reverse kinematics.
+  // Perform reversed kinematics, and place results in delta[3]
+  
+  float ax = deltaxy_armax;
+  float bx = deltaxy_armbx;
+  float la = deltaxy_armal;
+  float lb = deltaxy_armbl;
+  
+  //
+  
+  float ay,by;
+  //var tx1 = tx;
+  //var ty1 = ty;
+  ay = cal_delta_a_only(cartesian[0],cartesian[1],deltaxy_lH,ax);
+  float tx1,ty1;
+  circle_circle_intersection(cartesian[0],cartesian[1],deltaxy_arma_mountLen,ax,ay,la,deltaxy_lH,tx1,ty1);
+  cal_delta(tx1,ty1,la,lb,ax,bx,ay,by);
+  
   delta[X_AXIS] = ay;
   delta[Y_AXIS] = by;
-
-    delta[Z_AXIS] = cartesian[Z_AXIS];
-
-    /**
-    SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
-    SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
-    SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
-
-    SERIAL_ECHOPGM("scara x="); SERIAL_ECHO(SCARA_pos[X_AXIS]);
-    SERIAL_ECHOPGM(" y="); SERIAL_ECHOLN(SCARA_pos[Y_AXIS]);
-
-    SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
-    SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
-    SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
-
-    SERIAL_ECHOPGM("C2="); SERIAL_ECHO(SCARA_C2);
-    SERIAL_ECHOPGM(" S2="); SERIAL_ECHO(SCARA_S2);
-    SERIAL_ECHOPGM(" Theta="); SERIAL_ECHO(SCARA_theta);
-    SERIAL_ECHOPGM(" Psi="); SERIAL_ECHOLN(SCARA_psi);
-    SERIAL_EOL;
-    */
-  }
+  
+  delta[Z_AXIS] = cartesian[Z_AXIS];
+  
+  //
+  SERIAL_ECHOPGM("DELTAXY calc delta");
+  SERIAL_EOL;
+  
+  SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
+  SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
+  SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
+  
+  SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
+  SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+  SERIAL_EOL;
+}
 
 #endif // DELTAXY
 
