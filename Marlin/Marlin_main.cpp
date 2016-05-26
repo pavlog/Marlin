@@ -8303,16 +8303,16 @@ void calculate_DeltaXY_forward_Transform(float f_delta[3])
   delta[X_AXIS] = x;
   delta[Y_AXIS] = y;
   //
-  SERIAL_ECHOPGM("DELTAXY forward");
-  SERIAL_EOL;
+  //SERIAL_ECHOPGM("DELTAXY forward");
+  //SERIAL_EOL;
   
-  SERIAL_ECHOPGM("delta ay="); SERIAL_ECHO(f_delta[X_AXIS]);
-  SERIAL_ECHOPGM(" by="); SERIAL_ECHO(f_delta[Y_AXIS]);
-  SERIAL_EOL;
+  //SERIAL_ECHOPGM("delta ay="); SERIAL_ECHO(f_delta[X_AXIS]);
+  //SERIAL_ECHOPGM(" by="); SERIAL_ECHO(f_delta[Y_AXIS]);
+  //SERIAL_EOL;
   
-  SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(delta[X_AXIS]);
-  SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
-  SERIAL_EOL;
+  //SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(delta[X_AXIS]);
+  //SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+  //SERIAL_EOL;
 }
 
 void calculate_delta(float cartesian[3]) 
@@ -8341,16 +8341,16 @@ void calculate_delta(float cartesian[3])
   delta[Z_AXIS] = cartesian[Z_AXIS];
   
   //
-  SERIAL_ECHOPGM("DELTAXY calc delta");
-  SERIAL_EOL;
+  //SERIAL_ECHOPGM("DELTAXY calc delta");
+  //SERIAL_EOL;
   
-  SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
-  SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
-  SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
+  //SERIAL_ECHOPGM("cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
+  //SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
+  //SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
   
-  SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
-  SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
-  SERIAL_EOL;
+  //SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
+  //SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
+  //SERIAL_EOL;
 }
 
 #endif // DELTAXY

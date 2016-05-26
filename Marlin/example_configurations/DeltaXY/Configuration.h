@@ -38,8 +38,6 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-#define DEBUG_LEVELING_FEATURE
-
 #include "../../boards.h"
 #include "../../macros.h"
 
@@ -357,6 +355,10 @@
 // Enable DELTAXY kinematics and most of the default configuration for Deltas
 #define DELTAXY
 
+#ifdef DELTAXY
+	#define QUICK_HOME //DELTAXY needs Quickhome
+#endif
+
 #if ENABLED(DELTAXY)
 
   // Make delta curves from many straight lines (linear interpolation).
@@ -418,10 +420,10 @@
 // Mechanical endstop with COM to ground and NC to Signal uses "false" here (most common setup).
 const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Z_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool X_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Y_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_MIN_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 
 //===========================================================================
@@ -796,8 +798,8 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the lo
  */
 
 // deltaxy homing speeds must be the same on xy
-#define HOMING_FEEDRATE_XY (200*30)
-#define HOMING_FEEDRATE_Z (200*30)
+#define HOMING_FEEDRATE_XY (200*5)
+#define HOMING_FEEDRATE_Z (200*5)
 #define HOMING_FEEDRATE_E 0
 #define HOMING_FEEDRATE { HOMING_FEEDRATE_XY, HOMING_FEEDRATE_XY, HOMING_FEEDRATE_Z, HOMING_FEEDRATE_E }
 
@@ -805,7 +807,7 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the lo
 // deltaxy speeds must be the same on xy
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {200, 200, 200, 760*1.1}  // 200 - gt2 16teeth
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 500, 25}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {9000,9000,9000,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_MAX_ACCELERATION      {2000,2000,1000,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          3000    // X, Y, Z and E acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration in mm/s^2 for retracts
