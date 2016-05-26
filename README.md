@@ -4,15 +4,15 @@
 
 ##Fork changes (DELTAXY):
   - DELTAXY configuration added (just add #include "example_configurations/DeltaXY/Configuration.h" to Marlin/configuration.h)
-  - M665 - DELTAXY - Set deltaxy configurations A<ArmAX> B<ArmBX> L<ArmALen> M<ArmBLen> O<ArmAMountOffsetLen> P<ArmAMountOffsetAngle> S<segments_per_sec>
+  - M665 - DELTAXY - Set deltaxy configurations A#ArmAX B#ArmBX L#ArmALen M#ArmBLen O#ArmAMountOffsetLen P#ArmAMountOffsetAngle S#segments_per_sec
 
 Note: Visualization and math - https://jsfiddle.net/9L42z9he/
 
 ##Fork changes (SCARA):
   - FIVE_BAR define added (works together with SCARA define)
   - Extra arm added to mount end effector (EndPointMountOffset and EndPointMountAngle defines)
-  - added M453 - X<Linkage1> Y<Linkage2> O<EndPointMountOffset> A<EndPointMountAnglr> D<AxisDistances> S<segments_per_sec>
-  - added M370 - X<Angle> Y<Angle>
+  - added M453 - X#Linkage1 Y#Linkage2 O#EndPointMountOffset A#EndPointMountAngle D#AxisDistances S#segments_per_sec
+  - added M370 - X#Angle Y#Angle
   - G2/G3 commands support
   - Fixed math for pure SCARA (2 arms)
 
