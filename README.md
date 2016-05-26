@@ -2,6 +2,12 @@
 <img align="top" width=175 src="Documentation/Logo/Marlin%20Logo%20GitHub.png" />
  Additional documentation can be found in [The Marlin Wiki](https://github.com/MarlinFirmware/Marlin/wiki).
 
+##Fork changes (DELTAXY):
+  - DELTAXY define added
+  - M665 - DELTAXY - Set deltaxy configurations A<ArmAX> B<ArmBX> L<ArmALen> M<ArmBLen> O<ArmAMountOffsetLen> P<ArmAMountOffsetAngle> S<segments_per_sec>
+
+Note: Visualization and math - https://jsfiddle.net/1nhsvsvu/19/
+
 ##Fork changes:
   - FIVE_BAR define added (works together with SCARA define)
   - Extra arm added to mount end effector (EndPointMountOffset and EndPointMountAngle defines)
