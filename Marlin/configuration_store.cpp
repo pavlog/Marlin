@@ -548,7 +548,7 @@ void Config_RetrieveSettings() {
 	EEPROM_READ_VAR(i,_EndPointMountOffset);
 	EEPROM_READ_VAR(i,_EndPointMountAngleRad);
 	EEPROM_READ_VAR(i,_FiveBarAxesDist);
-	EEPROM_READ_VAR(i,_scara_segments_per_second);
+	EEPROM_READ_VAR(i,delta_segments_per_second);
 	_L1_2 = sq(_Linkage_1);
 	_L2_2 = sq(_Linkage_2);
 #endif
@@ -1081,7 +1081,7 @@ void Config_PrintSettings(bool forReplay) {
     SERIAL_ECHOPAIR(" O" ,_EndPointMountOffset );
     SERIAL_ECHOPAIR(" A" ,_EndPointMountAngleRad*SCARA_RAD2DEG );
     SERIAL_ECHOPAIR(" D" ,_FiveBarAxesDist );
-    SERIAL_ECHOPAIR(" S" ,_scara_segments_per_second );
+    SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
     SERIAL_ECHOLN("");
     #endif
 

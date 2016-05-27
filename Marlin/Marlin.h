@@ -333,9 +333,19 @@ extern float _home_dir[3]; // home dirs
   void recalc_deltaxy_settings();
   void calculate_DeltaXY_forward_Transform(float f_scara[3]);
 #elif ENABLED(SCARA)
+  #define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
   extern float axis_scaling[3];  // Build size scaling
+  extern float delta[3];
   void calculate_delta(float cartesian[3]);
   void calculate_SCARA_forward_Transform(float f_scara[3]);
+  extern float _Linkage_1;
+  extern float _Linkage_2;
+  extern float _EndPointMountOffset;
+  extern float _EndPointMountAngleRad;
+  extern float _FiveBarAxesDist;
+  extern float _L1_2;
+  extern float _L2_2;
+  extern float delta_segments_per_second;
 #endif
 
 #if ENABLED(Z_DUAL_ENDSTOPS)

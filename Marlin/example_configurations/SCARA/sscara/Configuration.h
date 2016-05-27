@@ -1,7 +1,8 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-#include "boards.h"
+#include "../../../boards.h"
+#include "../../../macros.h"
 
 // This configuration file contains the basic settings.
 // Advanced settings can be found in Configuration_adv.h
@@ -52,7 +53,7 @@
 
 #define FIVE_BAR  // http://cdn.intechopen.com/pdfs-wm/867.pdf for math but extended by end effector mount
 #define FBSIGN 1
-#define scara_segments_per_second 100 //careful, two much will decrease performance...
+#define SCARA_SEGMENTS_PER_SECOND 100 //careful, two much will decrease performance...
 // Length of inner support arm
 #define Linkage_1 70 //mm      Preprocessor cannot handle decimal point...
 // Length of outer support arm     Measure arm lengths precisely and enter 
@@ -79,9 +80,9 @@
 // @section info
 
 #if ENABLED(USE_AUTOMATIC_VERSIONING)
-  #include "_Version.h"
+  #include "../../../_Version.h"
 #else
-  #include "Version.h"
+  #include "../../../Version.h"
 #endif
 
 // User-specified version info of this build to display in [Pronterface, etc] terminal window during
@@ -102,16 +103,16 @@
 #define BAUDRATE 115200 // i use bluetooth HC-05 module
 
 // Enable the Bluetooth serial interface on AT90USB devices
-#define BTENABLED              // Enable BT interface on AT90USB devices
+//#define BLUETOOTH
 
 // The following define selects which electronics board you have.
 // Please choose the name from boards.h that matches your setup
 #ifndef MOTHERBOARD
-  #define MOTHERBOARD BOARD_RAMPS_13_EFB
+  #define MOTHERBOARD BOARD_RAMPS_14_EFB
 #endif
 
 // Define this to set a custom name for your generic Mendel,
-#define CUSTOM_MENDEL_NAME "Kuzya" // in memories of my 17+ years cat R.I.P.
+#define CUSTOM_MACHINE_NAME "Kuzya" // in memories of my 17+ years cat R.I.P.
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
@@ -254,6 +255,45 @@
 #endif // PIDTEMP
 
 //===========================================================================
+//============================= PID Settings ================================
+//===========================================================================
+// PID Tuning Guide here: http://reprap.org/wiki/PID_Tuning
+
+// Comment the following line to disable PID and enable bang-bang.
+#define PIDTEMP
+#define BANG_MAX 255 // limits current to nozzle while in bang-bang mode; 255=full current
+#define PID_MAX BANG_MAX // limits current to nozzle while PID is active (see PID_FUNCTIONAL_RANGE below); 255=full current
+#if ENABLED(PIDTEMP)
+  //#define PID_AUTOTUNE_MENU // Add PID Autotune to the LCD "Temperature" menu to run M303 and apply the result.
+  //#define PID_DEBUG // Sends debug data to the serial port.
+  //#define PID_OPENLOOP 1 // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
+  //#define SLOW_PWM_HEATERS // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
+  //#define PID_PARAMS_PER_EXTRUDER // Uses separate PID parameters for each extruder (useful for mismatched extruders)
+                                    // Set/get with gcode: M301 E[extruder number, 0-2]
+  #define PID_FUNCTIONAL_RANGE 10 // If the temperature difference between the target temperature and the actual temperature
+                                  // is more than PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
+  #define PID_INTEGRAL_DRIVE_MAX PID_MAX  //limit for the integral term
+  #define K1 0.95 //smoothing factor within the PID
+
+  // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
+  // Ultimaker
+  #define  DEFAULT_Kp 22.2
+  #define  DEFAULT_Ki 1.08
+  #define  DEFAULT_Kd 114
+
+  // MakerGear
+  //#define  DEFAULT_Kp 7.0
+  //#define  DEFAULT_Ki 0.1
+  //#define  DEFAULT_Kd 12
+
+  // Mendel Parts V9 on 12V
+  //#define  DEFAULT_Kp 63.0
+  //#define  DEFAULT_Ki 2.25
+  //#define  DEFAULT_Kd 440
+
+#endif // PIDTEMP
+
+//===========================================================================
 //============================= PID > Bed Temperature Control ===============
 //===========================================================================
 // Select PID or bang-bang with PIDTEMPBED. If bang-bang, BED_LIMIT_SWITCHING will enable hysteresis
@@ -265,9 +305,9 @@
 // If your configuration is significantly different than this and you don't understand the issues involved, you probably
 // shouldn't use bed PID until someone else verifies your hardware works.
 // If this is enabled, find your own PID constants below.
-#define PIDTEMPBED
-//
-#define BED_LIMIT_SWITCHING
+//#define PIDTEMPBED
+
+//#define BED_LIMIT_SWITCHING
 
 // This sets the max power delivered to the bed, and replaces the HEATER_BED_DUTY_CYCLE_DIVIDER option.
 // all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
@@ -280,23 +320,20 @@
   //#define PID_BED_DEBUG // Sends debug data to the serial port.
 
   #define PID_BED_INTEGRAL_DRIVE_MAX MAX_BED_POWER //limit for the integral term
-    
-  //12v Heatbed Mk3 12V in parallel
-//from pidautotune
-  //#define  DEFAULT_bedKp 630.14
-  //#define  DEFAULT_bedKi 121.71
-  //#define  DEFAULT_bedKd 815.64
+
+  //120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
+  //from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
+  #define  DEFAULT_bedKp 10.00
+  #define  DEFAULT_bedKi .023
+  #define  DEFAULT_bedKd 305.4
+
+  //120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
+  //from pidautotune
+  //#define  DEFAULT_bedKp 97.1
+  //#define  DEFAULT_bedKi 1.41
+  //#define  DEFAULT_bedKd 1675.16
 
   // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
-
-//12v Heatbed Mk2b 12V in parallel
-//from pidautotune
-    #define  DEFAULT_bedKp 538.07
-    #define  DEFAULT_bedKi 106.71
-    #define  DEFAULT_bedKd 684.02
-
-// FIND YOUR OWN: "M303 E-1 C8 S95" to run autotune on the bed at 90 degreesC for 8 cycles.
-
 #endif // PIDTEMPBED
 
 // @section extruder
@@ -1132,6 +1169,6 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 #endif
 
 #include "Configuration_adv.h"
-#include "thermistortables.h"
+#include "../../../thermistortables.h"
 
 #endif //CONFIGURATION_H

@@ -33,7 +33,7 @@
 #ifndef CONFIGURATION_ADV_H
 #define CONFIGURATION_ADV_H
 
-#include "Conditionals.h"
+#include "../../../Conditionals.h"
 
 // @section temperature
 
@@ -685,7 +685,7 @@ const unsigned int dropsegments = 5; //everything with less than this number of 
 
 //#define EXPERIMENTAL_I2CBUS
 
-#include "Conditionals.h"
-#include "SanityCheck.h"
+#include "../../../Conditionals.h"
+#include "../../../SanityCheck.h"
 
 #endif //CONFIGURATION_ADV_H

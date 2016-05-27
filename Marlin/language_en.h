@@ -509,4 +509,14 @@
   #define MSG_DELTA_CALIBRATE_CENTER          "Calibrate Center"
 #endif
 
+#if ENABLED(SCARA)
+  #ifndef MSG_XSCALE
+    #define MSG_XSCALE          "X Scale"
+  #endif
+
+  #ifndef MSG_YSCALE
+    #define MSG_YSCALE          "Y Scale"
+  #endif
+ #endif
+
 #endif // LANGUAGE_EN_H
