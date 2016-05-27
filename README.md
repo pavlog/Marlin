@@ -2,7 +2,6 @@
 <img align="top" width=175 src="Documentation/Logo/Marlin%20Logo%20GitHub.png" />
  Additional documentation can be found in [The Marlin Wiki](https://github.com/MarlinFirmware/Marlin/wiki).
 
-<<<<<<< HEAD
 ##Fork changes (GENERAL):
   - added M454 - xyz home dir
   - added M450 - xyz min limits
@@ -12,10 +11,6 @@
 	
 	##Fork changes (DELTAXY):
   - DELTAXY configuration added (just add #include "example_configurations/DeltaXY/Configuration.h" in to Marlin/configuration.h)
-=======
-##Fork changes (DELTAXY):
-  - DELTAXY configuration added (just add #include "example_configurations/DeltaXY/Configuration.h" to Marlin/configuration.h)
->>>>>>> Release
   - M665 - DELTAXY - Set deltaxy configurations A#ArmAX B#ArmBX L#ArmALen M#ArmBLen O#ArmAMountOffsetLen P#ArmAMountOffsetAngle S#segments_per_sec
 
 Note: Visualization and math - https://jsfiddle.net/9L42z9he/
@@ -28,14 +23,6 @@ Note: Visualization and math - https://jsfiddle.net/9L42z9he/
   - G2/G3 commands support
   - Fixed math for pure SCARA (2 arms)
 
-<<<<<<< HEAD
-=======
-##Fork changes (GENERAL):
-  - added M454 - xyz home dir
-  - added M450 - xyz min limits
-  - added M451 - xyz max limits
-  - added M452 - xyz home pos
->>>>>>> Release
 
 
 About FIVE_BAR or SCARA_TYPE 2
