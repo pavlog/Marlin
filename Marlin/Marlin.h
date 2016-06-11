@@ -278,6 +278,8 @@ extern float sw_endstop_min[3]; // axis[n].sw_endstop_min
 extern float sw_endstop_max[3]; // axis[n].sw_endstop_max
 extern bool axis_known_position[3]; // axis[n].is_known
 extern bool axis_homed[3]; // axis[n].is_homed
+extern float  _base_min_pos[3];
+extern float  _base_max_pos[3];
 extern float _base_home_pos[3];// home pos
 extern float _home_dir[3]; // home dirs
 

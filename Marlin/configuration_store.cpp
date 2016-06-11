@@ -330,8 +330,8 @@ void Config_StoreSettings()  {
     EEPROM_WRITE_VAR(i, dummy);
   }
 
-  EEPROM_WRITE_VAR(i,sw_endstop_min);
-  EEPROM_WRITE_VAR(i,sw_endstop_max);
+  EEPROM_WRITE_VAR(i,_base_min_pos);
+  EEPROM_WRITE_VAR(i,_base_max_pos);
   EEPROM_WRITE_VAR(i,_base_home_pos);
   
   EEPROM_WRITE_VAR(i,_home_dir);
@@ -536,8 +536,8 @@ void Config_RetrieveSettings() {
     }
 
 	
-	EEPROM_READ_VAR(i,sw_endstop_min);
-	EEPROM_READ_VAR(i,sw_endstop_max);
+	EEPROM_READ_VAR(i,_base_min_pos);
+	EEPROM_READ_VAR(i,_base_max_pos);
 	EEPROM_READ_VAR(i,_base_home_pos);
 
 	EEPROM_READ_VAR(i,_home_dir);
@@ -708,13 +708,13 @@ void Config_ResetDefault() {
     filament_size[q] = DEFAULT_NOMINAL_FILAMENT_DIA;
   calculate_volumetric_multipliers();
 
-	sw_endstop_min[X_AXIS] = X_MIN_POS;
-	sw_endstop_min[Y_AXIS] = Y_MIN_POS;
-	sw_endstop_min[Z_AXIS] = Z_MIN_POS;
+	_base_min_pos[X_AXIS] = X_MIN_POS;
+	_base_min_pos[Y_AXIS] = Y_MIN_POS;
+	_base_min_pos[Z_AXIS] = Z_MIN_POS;
 
-	sw_endstop_max[X_AXIS] = X_MAX_POS;
-	sw_endstop_max[Y_AXIS] = Y_MAX_POS;
-	sw_endstop_max[Z_AXIS] = Z_MAX_POS;
+	_base_max_pos[X_AXIS] = X_MAX_POS;
+	_base_max_pos[Y_AXIS] = Y_MAX_POS;
+	_base_max_pos[Z_AXIS] = Z_MAX_POS;
 
 	_base_home_pos[X_AXIS] = X_HOME_POS;
 	_base_home_pos[Y_AXIS] = Y_HOME_POS;
@@ -723,6 +723,14 @@ void Config_ResetDefault() {
 	_home_dir[X_AXIS] = X_HOME_DIR;
 	_home_dir[Y_AXIS] = Y_HOME_DIR;
 	_home_dir[Z_AXIS] = Z_HOME_DIR;
+
+  sw_endstop_min[X_AXIS] = X_MIN_POS;
+  sw_endstop_min[Y_AXIS] = Y_MIN_POS;
+  sw_endstop_min[Z_AXIS] = Z_MIN_POS;
+
+  sw_endstop_max[X_AXIS] = X_MAX_POS;
+  sw_endstop_max[Y_AXIS] = Y_MAX_POS;
+  sw_endstop_max[Z_AXIS] = Z_MAX_POS;
 
   #ifdef SCARA
     #define TEMP_RAD2DEG 57.2957795  // to convert RAD to degrees
@@ -1051,17 +1059,17 @@ void Config_PrintSettings(bool forReplay) {
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Min limits (mm):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M450 X",sw_endstop_min[X_AXIS] );
-    SERIAL_ECHOPAIR(" Y" ,sw_endstop_min[Y_AXIS] );
-    SERIAL_ECHOPAIR(" Z" ,sw_endstop_min[Z_AXIS] );
+    SERIAL_ECHOPAIR("  M450 X",_base_min_pos[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" ,_base_min_pos[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,_base_min_pos[Z_AXIS] );
     SERIAL_ECHOLN("");
 
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Max limits (mm):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M451 X",sw_endstop_max[X_AXIS] );
-    SERIAL_ECHOPAIR(" Y" ,sw_endstop_max[Y_AXIS] );
-    SERIAL_ECHOPAIR(" Z" ,sw_endstop_max[Z_AXIS] );
+    SERIAL_ECHOPAIR("  M451 X",_base_max_pos[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" ,_base_max_pos[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,_base_max_pos[Z_AXIS] );
     SERIAL_ECHOLN("");
 
     SERIAL_ECHO_START;

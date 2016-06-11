@@ -7237,7 +7237,7 @@ void process_next_command() {
 
       #endif // HAS_MICROSTEPS
 
-    case 450: // M451 xyz min limits
+    case 450: // M450 xyz min limits
       for(int8_t i=0; i < 3; i++)
       {
         if(code_seen(axis_codes[i])) _base_min_pos[i] = code_value();
