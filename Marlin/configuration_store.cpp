@@ -1089,7 +1089,7 @@ void Config_PrintSettings(bool forReplay) {
     SERIAL_ECHOPAIR(" O" ,_EndPointMountOffset );
     SERIAL_ECHOPAIR(" A" ,_EndPointMountAngleRad*SCARA_RAD2DEG );
     SERIAL_ECHOPAIR(" D" ,_FiveBarAxesDist );
-    SERIAL_ECHOPAIR(" S" ,_scara_segments_per_second );
+    SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
     SERIAL_ECHOLN("");
     #endif
 
@@ -1102,6 +1102,7 @@ void Config_PrintSettings(bool forReplay) {
       SERIAL_ECHOPAIR(" M" ,deltaxy_armbl );
       SERIAL_ECHOPAIR(" O" ,deltaxy_arma_mountLen );
       SERIAL_ECHOPAIR(" P" ,deltaxy_arma_mountAngle*DELTAXY_RAD2DEG );
+      SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
       SERIAL_ECHOLN("");
     #endif
 

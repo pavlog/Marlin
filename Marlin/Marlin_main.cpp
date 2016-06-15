@@ -1436,21 +1436,21 @@ static void set_axis_is_at_home(AxisEnum axis) {
           homeposition[i] = base_home_pos(i); 
        }  
         SERIAL_ECHOPGM("DeltaXY homing ");
-        SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
-        SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
+        //SERIAL_ECHOPGM("homeposition[x]= "); SERIAL_ECHO(homeposition[0]);
+        //SERIAL_ECHOPGM("homeposition[y]= "); SERIAL_ECHOLN(homeposition[1]);
         // Works out real Homeposition angles using inverse kinematics, 
         // and calculates homing offset using forward kinematics
         calculate_delta(homeposition);
   
         // SERIAL_ECHOPGM("addhome X="); SERIAL_ECHO(add_homing[X_AXIS]);
         // SERIAL_ECHOPGM(" addhome Y="); SERIAL_ECHO(add_homing[Y_AXIS]);
-        // SERIAL_ECHOPGM(" addhome Theta="); SERIAL_ECHO(delta[X_AXIS]);
-        // SERIAL_ECHOPGM(" addhome Psi+Theta="); SERIAL_ECHOLN(delta[Y_AXIS]);
+        SERIAL_ECHOPGM(" XHomeDelta="); SERIAL_ECHO(delta[X_AXIS]);
+        SERIAL_ECHOPGM(" YHomeDelta="); SERIAL_ECHOLN(delta[Y_AXIS]);
   
         calculate_DeltaXY_forward_Transform(delta);
   
-        // SERIAL_ECHOPGM("Delta X="); SERIAL_ECHO(delta[X_AXIS]);
-        // SERIAL_ECHOPGM(" Delta Y="); SERIAL_ECHOLN(delta[Y_AXIS]);
+        //SERIAL_ECHOPGM("Delta X="); SERIAL_ECHO(delta[X_AXIS]);
+        //SERIAL_ECHOPGM(" Delta Y="); SERIAL_ECHOLN(delta[Y_AXIS]);
   
         current_position[axis] = delta[axis];
   
@@ -5077,6 +5077,14 @@ inline void gcode_M114() {
         SERIAL_PROTOCOLPGM("sq(L2):");
         SERIAL_PROTOCOL(_L2_2);
         SERIAL_PROTOCOLLN("");
+  #endif
+
+  #if ENABLED(DELTAXY)
+    SERIAL_PROTOCOLPGM("DeltaX:");
+    SERIAL_PROTOCOL(delta[X_AXIS]);
+    SERIAL_PROTOCOLPGM("   DeltaY:");
+    SERIAL_PROTOCOL(delta[Y_AXIS]);
+    SERIAL_PROTOCOLLN("");
   #endif
 }
 
