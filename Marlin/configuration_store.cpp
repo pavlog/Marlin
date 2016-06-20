@@ -139,6 +139,10 @@
   #include "mesh_bed_leveling.h"
 #endif
 
+#if defined(DEFAULT_HYSTERESIS_MM)
+ #include "Hysteresis.h"
+#endif
+
 void _EEPROM_writeData(int &pos, uint8_t* value, uint8_t size) {
   uint8_t c;
   while (size--) {
@@ -357,6 +361,17 @@ void Config_StoreSettings()  {
   #endif
 
 
+  #if defined(DEFAULT_HYSTERESIS_MM)
+    float hyst_temp = hysteresis.GetAxis(X_AXIS);
+    EEPROM_WRITE_VAR(i, hyst_temp);                   // 1 float
+    hyst_temp = hysteresis.GetAxis(Y_AXIS);
+    EEPROM_WRITE_VAR(i, hyst_temp);                   // 1 float
+    hyst_temp = hysteresis.GetAxis(Z_AXIS);
+    EEPROM_WRITE_VAR(i, hyst_temp);                   // 1 float
+    hyst_temp = hysteresis.GetAxis(E_AXIS);
+    EEPROM_WRITE_VAR(i, hyst_temp);                   // 1 float
+  #endif
+
   char ver2[4] = EEPROM_VERSION;
   int j = EEPROM_OFFSET;
   EEPROM_WRITE_VAR(j, ver2); // validate data
@@ -565,6 +580,18 @@ void Config_RetrieveSettings() {
     recalc_deltaxy_settings();
   #endif
 
+  #if defined(DEFAULT_HYSTERESIS_MM)
+    float hyst_temp =0;
+    EEPROM_READ_VAR(i, hyst_temp);                   // 1 float
+    hysteresis.SetAxis(X_AXIS,hyst_temp);
+    EEPROM_READ_VAR(i, hyst_temp);                   // 1 float
+    hysteresis.SetAxis(Y_AXIS,hyst_temp);
+    EEPROM_READ_VAR(i, hyst_temp);                   // 1 float
+    hysteresis.SetAxis(Z_AXIS,hyst_temp);
+    EEPROM_READ_VAR(i, hyst_temp);                   // 1 float
+    hysteresis.SetAxis(E_AXIS,hyst_temp);
+  #endif
+
 
     calculate_volumetric_multipliers();
     // Call updatePID (similar to when we have processed M301)
@@ -742,6 +769,14 @@ void Config_ResetDefault() {
     //some helper variables to make kinematics faster
     _L1_2 = sq(Linkage_1);
     _L2_2 = sq(Linkage_2);
+  #endif
+
+  #if defined(DEFAULT_HYSTERESIS_MM)
+    float tmp_hysterisis[] = { DEFAULT_HYSTERESIS_MM };
+    hysteresis.SetAxis(X_AXIS,tmp_hysterisis[X_AXIS]);
+    hysteresis.SetAxis(Y_AXIS,tmp_hysterisis[Y_AXIS]);
+    hysteresis.SetAxis(Z_AXIS,tmp_hysterisis[Z_AXIS]);
+    hysteresis.SetAxis(E_AXIS,tmp_hysterisis[E_AXIS]);
   #endif
 
   SERIAL_ECHO_START;
@@ -1103,6 +1138,16 @@ void Config_PrintSettings(bool forReplay) {
       SERIAL_ECHOPAIR(" O" ,deltaxy_arma_mountLen );
       SERIAL_ECHOPAIR(" P" ,deltaxy_arma_mountAngle*DELTAXY_RAD2DEG );
       SERIAL_ECHOPAIR(" S" ,delta_segments_per_second );
+      SERIAL_ECHOLN("");
+    #endif
+
+  #if defined(DEFAULT_HYSTERESIS_MM)
+      SERIAL_ECHO_START;
+      SERIAL_ECHOLNPGM("Hysterisis setings: X<mm> Y<mm> Z<mm> E<mm>");
+      SERIAL_ECHOPAIR("  M99 X",hysteresis.GetAxis(X_AXIS) );
+      SERIAL_ECHOPAIR(" Y" ,hysteresis.GetAxis(Y_AXIS) );
+      SERIAL_ECHOPAIR(" Z" ,hysteresis.GetAxis(Z_AXIS) );
+      SERIAL_ECHOPAIR(" E" ,hysteresis.GetAxis(E_AXIS) );
       SERIAL_ECHOLN("");
     #endif
 

@@ -81,6 +81,10 @@
   #include "mesh_bed_leveling.h"
 #endif
 
+#if defined(DEFAULT_HYSTERESIS_MM)
+  #include "Hysteresis.h"
+#endif
+
 //===========================================================================
 //============================= public variables ============================
 //===========================================================================
@@ -560,6 +564,9 @@ float junction_deviation = 0.1;
   void plan_buffer_line(const float& x, const float& y, const float& z, const float& e, float feed_rate, const uint8_t extruder)
 #endif  // AUTO_BED_LEVELING_FEATURE
 {
+  #if defined(DEFAULT_HYSTERESIS_MM)
+    hysteresis.InsertCorrection(x,y,z,e);
+  #endif
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
 

@@ -818,6 +818,7 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the lo
 #define DEFAULT_ZJERK                 5.0    // (mm/sec)
 #define DEFAULT_EJERK                 5.0     // (mm/sec)
 
+#define DEFAULT_HYSTERESIS_MM 0, 0, 0, 0 // X, Y, Z, E hysteresis in mm. These are the extra distances that are performed when an axis changes direction to compensate for any mechanical hysteresis your printer has. 
 
 //=============================================================================
 //============================= Additional Features ===========================

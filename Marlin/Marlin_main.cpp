@@ -81,6 +81,11 @@
   #include "twibus.h"
 #endif
 
+#if defined(DEFAULT_HYSTERESIS_MM)
+  #include "Hysteresis.h"
+#endif
+
+
 /**
  * Look here for descriptions of G-codes:
  *  - http://linuxcnc.org/handbook/gcode/g-code.html
@@ -145,6 +150,8 @@
  *        or use S<seconds> to specify an inactivity timeout, after which the steppers will be disabled.  S0 to disable the timeout.
  * M85  - Set inactivity shutdown timer with parameter S<seconds>. To disable set zero (default)
  * M92  - Set axis_steps_per_unit - same syntax as G92
+ * M98  - reports X, Y, Z, E hysteresis in mm - avalibale only if DEFAULT_HYSTERESIS_MM defined
+ * M99  - sets X, Y, Z, E hysteresis in mm - available only if DEFAULT_HYSTERESIS_MM defined
  * M104 - Set extruder target temp
  * M105 - Read current temp
  * M106 - Fan on
@@ -6935,6 +6942,19 @@ void process_next_command() {
       case 92: // M92: Set the steps-per-unit for one or more axes
         gcode_M92();
         break;
+#if defined(DEFAULT_HYSTERESIS_MM)
+      case 98: // M98
+        hysteresis.ReportToSerial();
+        break;
+      case 99: // M99
+      {
+        if(code_seen('X')) hysteresis.SetAxis( X_AXIS, code_value() );
+        if(code_seen('Y')) hysteresis.SetAxis( Y_AXIS, code_value() );
+        if(code_seen('Z')) hysteresis.SetAxis( Z_AXIS, code_value() );
+        if(code_seen('E')) hysteresis.SetAxis( E_AXIS, code_value() );
+      }
+      break; 
+#endif
       case 115: // M115: Report capabilities
         gcode_M115();
         break;
