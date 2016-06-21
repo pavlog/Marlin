@@ -53,6 +53,13 @@ void Hysteresis::Set( float x_mm, float y_mm, float z_mm, float e_mm )
 //===========================================================================
 void Hysteresis::SetAxis( int axis, float mm )
 {
+          SERIAL_PROTOCOLPGM(" sethyst axis:");      
+        SERIAL_PROTOCOL(axis);
+        SERIAL_PROTOCOLPGM(" val:");      
+        SERIAL_PROTOCOL(mm);
+        SERIAL_PROTOCOLLN("");
+
+
   m_hysteresis_mm[axis] = mm;
   if( mm != 0.0f )
   {
@@ -135,45 +142,61 @@ void Hysteresis::InsertCorrection(const float &x, const float &y, const float &z
     {
       fixed_pos[axis] = current_position[axis];
       // if this axis changed direction...
-      if( direction_change_bits & (1<<axis) )
+      if( direction_change_bits & (1<<axis) && (m_hysteresis_bits & (1<<axis)))
       {
         //... add the hysteresis
-        fixed_pos[axis] += (((direction_bits&(1<<axis))!=0)?-m_hysteresis_mm[axis]:m_hysteresis_mm[axis]);
+        float hyst =  (((direction_bits&(1<<axis))!=0)?-m_hysteresis_mm[axis]:m_hysteresis_mm[axis]);
+     
+        SERIAL_PROTOCOLPGM(" hyst axis:");      
+        SERIAL_PROTOCOL(axis);
+        SERIAL_PROTOCOLPGM(" val:");      
+        SERIAL_PROTOCOL(hyst);
+        SERIAL_PROTOCOLLN("");
+
+
+        fixed_pos[axis] = fixed_pos[axis] + hyst;
       }
     }
     float best_feedrate = calc_best_feedrate( current_position, destination );
 
-/*
-        // debug output to display any hysteresis corrections.
-        SERIAL_PROTOCOLPGM("From=X");
-        SERIAL_PROTOCOL(current_position[X_AXIS]);
-        SERIAL_PROTOCOLPGM(" Y");
-        SERIAL_PROTOCOL(current_position[Y_AXIS]);
-        SERIAL_PROTOCOLPGM(" Z");
-        SERIAL_PROTOCOL(current_position[Z_AXIS]);
-        SERIAL_PROTOCOLPGM(" E");      
-        SERIAL_PROTOCOL(current_position[E_AXIS]);
+      #if ENABLED(DELTA)
+        fixed_pos[X_AXIS] = destination[X_AXIS];
+        fixed_pos[Y_AXIS] = destination[Y_AXIS];
+        fixed_pos[Z_AXIS] = destination[Z_AXIS];
+      #elif ENABLED(DELTAXY) || ENABLED(SCARA)
+        fixed_pos[X_AXIS] = destination[X_AXIS];
+        fixed_pos[Y_AXIS] = destination[Y_AXIS];
+      #endif
+///*
+      // debug output to display any hysteresis corrections.
+      SERIAL_PROTOCOLPGM("From=X");
+      SERIAL_PROTOCOL(current_position[X_AXIS]);
+      SERIAL_PROTOCOLPGM(" Y");
+      SERIAL_PROTOCOL(current_position[Y_AXIS]);
+      SERIAL_PROTOCOLPGM(" Z");
+      SERIAL_PROTOCOL(current_position[Z_AXIS]);
+      SERIAL_PROTOCOLPGM(" E");      
+      SERIAL_PROTOCOL(current_position[E_AXIS]);
 
-        SERIAL_PROTOCOLLN("");
+      SERIAL_PROTOCOLLN("");
 
-        SERIAL_PROTOCOLPGM("  To=X");
-        SERIAL_PROTOCOL(fixed_pos[X_AXIS]);
-        SERIAL_PROTOCOLPGM(" Y");
-        SERIAL_PROTOCOL(fixed_pos[Y_AXIS]);
-        SERIAL_PROTOCOLPGM(" Z");
-        SERIAL_PROTOCOL(fixed_pos[Z_AXIS]);
-        SERIAL_PROTOCOLPGM(" E");      
-        SERIAL_PROTOCOL(fixed_pos[E_AXIS]);
-        
-        SERIAL_PROTOCOLPGM(" F");      
-        SERIAL_PROTOCOL(best_feedrate);
-        
+      SERIAL_PROTOCOLPGM("  To=X");
+      SERIAL_PROTOCOL(fixed_pos[X_AXIS]);
+      SERIAL_PROTOCOLPGM(" Y");
+      SERIAL_PROTOCOL(fixed_pos[Y_AXIS]);
+      SERIAL_PROTOCOLPGM(" Z");
+      SERIAL_PROTOCOL(fixed_pos[Z_AXIS]);
+      SERIAL_PROTOCOLPGM(" E");      
+      SERIAL_PROTOCOL(fixed_pos[E_AXIS]);
+      
+      SERIAL_PROTOCOLPGM(" F");      
+      SERIAL_PROTOCOL(best_feedrate);
+      
 
-        SERIAL_PROTOCOLLN("");
-*/
-  
-    m_prev_direction_bits = direction_bits; // need to set these now to avoid recursion as plan_buffer_line calls this function
-    plan_buffer_line(fixed_pos[X_AXIS], fixed_pos[Y_AXIS], fixed_pos[Z_AXIS], fixed_pos[E_AXIS], best_feedrate, active_extruder);
+      SERIAL_PROTOCOLLN("");
+//*/
+      m_prev_direction_bits = direction_bits; // need to set these now to avoid recursion as plan_buffer_line calls this function
+      plan_buffer_line(fixed_pos[X_AXIS], fixed_pos[Y_AXIS], fixed_pos[Z_AXIS], fixed_pos[E_AXIS], best_feedrate, active_extruder);
   }
   m_prev_direction_bits = direction_bits;
 }

@@ -17,7 +17,7 @@
  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Configuration.h"
+#include "Marlin.h"
 
 //===========================================================================
 
@@ -25,13 +25,12 @@ class Hysteresis
 {
 public:
   Hysteresis( float x_mm, float y_mm, float z_mm, float e_mm );
-  
+
   void Set( float x_mm, float y_mm, float z_mm, float e_mm );
   void SetAxis( int axis, float mm );
   float GetAxis( int axis ) const;
   void ReportToSerial();
   void InsertCorrection(const float &x, const float &y, const float &z, const float &e);
-
 private:
   float         m_hysteresis_mm[NUM_AXIS];
   unsigned char m_prev_direction_bits;
