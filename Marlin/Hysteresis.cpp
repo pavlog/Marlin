@@ -27,9 +27,11 @@
 #include "language.h"
 
 //===========================================================================
-
+#if defined (DEFAULT_HYSTERESIS_MM)
 Hysteresis hysteresis( DEFAULT_HYSTERESIS_MM );
-
+#else
+Hysteresis hysteresis( 0,0,0,0 );
+#endif
 //===========================================================================
 Hysteresis::Hysteresis( float x_mm, float y_mm, float z_mm, float e_mm )
 {

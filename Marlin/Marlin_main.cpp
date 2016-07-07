@@ -468,7 +468,7 @@ static uint8_t target_extruder;
 
 #if ENABLED(SCARA)
   float delta_segments_per_second = SCARA_SEGMENTS_PER_SECOND;
-  static float delta[3] = { 0 };
+  float delta[3] = { 0 };
   float axis_scaling[3] = { 1, 1, 1 };    // Build size scaling, default to 1
   #define SCARA_RAD2DEG 57.2957795  // to convert RAD to degrees
   float _Linkage_1 = Linkage_1;
@@ -1397,7 +1397,7 @@ static void set_axis_is_at_home(AxisEnum axis) {
 		 #if defined(FIVE_BAR) || (SCARA_TYPE>=1)
        for (i=0; i<2; i++)
        {
-          delta[i] -= FBSIGN*add_homing[i];
+          delta[i] -= FBSIGN*home_offset[i];
        } 
   
        //SERIAL_ECHOPGM("base q1= "); SERIAL_ECHO(FBSIGN*delta[X_AXIS]);
@@ -1409,7 +1409,7 @@ static void set_axis_is_at_home(AxisEnum axis) {
 
        for (i=0; i<2; i++)
        {
-          delta[i] -= add_homing[i];
+          delta[i] -= home_offset[i];
        } 
      #endif
     // SERIAL_ECHOPGM("addhome X="); SERIAL_ECHO(add_homing[X_AXIS]);
@@ -5874,8 +5874,9 @@ inline void gcode_M303() {
   /**
    * M370: SCARA q1 q2 angles
    */
-			#if !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
-  inline void gcode_M370() {
+	#if !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
+  inline void gcode_M370() 
+  {
     	if(Stopped == false) 
 			{
 		    //                 \     /
@@ -5906,8 +5907,7 @@ inline void gcode_M303() {
         _max_software_endstops = bMaxPrev;
 		  }
   }
-	#endif
-
+  #endif
 #endif // SCARA
 
 #if ENABLED(EXT_SOLENOID)
@@ -7142,7 +7142,9 @@ void process_next_command() {
           break;
   #else
     case 370: // M370 - five bar q1 and q2 
+      #if !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
 					gcode_M370();
+      #endif
     break;
 	#endif
       #endif // SCARA
@@ -7295,7 +7297,7 @@ void process_next_command() {
         if(code_seen('O')) _EndPointMountOffset = code_value();
         if(code_seen('A')) _EndPointMountAngleRad = code_value()/SCARA_RAD2DEG;
         if(code_seen('D')) _FiveBarAxesDist = code_value();
-        if(code_seen('S')) scara_segments_per_second = code_value();
+        if(code_seen('S')) delta_segments_per_second = code_value();
       }
       break;
      #endif
@@ -7905,8 +7907,6 @@ void plan_arc(
   
   float angleX = FBSIGN*f_scara[X_AXIS]/SCARA_RAD2DEG;
   float angleY = FBSIGN*f_scara[Y_AXIS]/SCARA_RAD2DEG+M_PI;
-  
-  float x_sin, x_cos, y_sin, y_cos;
   
   x_sin = sin(angleX) * _Linkage_1;
   x_cos = cos(angleX) * _Linkage_1;
