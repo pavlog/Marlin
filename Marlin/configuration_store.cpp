@@ -372,6 +372,9 @@ void Config_StoreSettings()  {
     EEPROM_WRITE_VAR(i, hyst_temp);                   // 1 float
   #endif
 
+  EEPROM_WRITE_VAR(i,homing_feedrate);
+
+
   char ver2[4] = EEPROM_VERSION;
   int j = EEPROM_OFFSET;
   EEPROM_WRITE_VAR(j, ver2); // validate data
@@ -592,6 +595,7 @@ void Config_RetrieveSettings() {
     hysteresis.SetAxis(E_AXIS,hyst_temp);
   #endif
 
+    EEPROM_READ_VAR(i,homing_feedrate);
 
     calculate_volumetric_multipliers();
     // Call updatePID (similar to when we have processed M301)
@@ -758,6 +762,12 @@ void Config_ResetDefault() {
   sw_endstop_max[X_AXIS] = X_MAX_POS;
   sw_endstop_max[Y_AXIS] = Y_MAX_POS;
   sw_endstop_max[Z_AXIS] = Z_MAX_POS;
+
+  const float tmp_homing_feedrate[4] = HOMING_FEEDRATE;
+  homing_feedrate[X_AXIS] = tmp_homing_feedrate[X_AXIS];
+  homing_feedrate[Y_AXIS] = tmp_homing_feedrate[Y_AXIS];
+  homing_feedrate[Z_AXIS] = tmp_homing_feedrate[Z_AXIS];
+  homing_feedrate[E_AXIS] = tmp_homing_feedrate[E_AXIS];
 
   #ifdef SCARA
     #define TEMP_RAD2DEG 57.2957795  // to convert RAD to degrees
@@ -1113,6 +1123,15 @@ void Config_PrintSettings(bool forReplay) {
     SERIAL_ECHOPAIR("  M452 X",_base_home_pos[X_AXIS] );
     SERIAL_ECHOPAIR(" Y" ,_base_home_pos[Y_AXIS] );
     SERIAL_ECHOPAIR(" Z" ,_base_home_pos[Z_AXIS] );
+    SERIAL_ECHOLN("");
+
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Home feedrate (mm/min):");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPAIR("  M210 X",homing_feedrate[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" ,homing_feedrate[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,homing_feedrate[Z_AXIS] );
+    SERIAL_ECHOPAIR(" E" ,homing_feedrate[E_AXIS] );
     SERIAL_ECHOLN("");
 
     #ifdef SCARA

@@ -282,7 +282,7 @@ extern float  _base_min_pos[3];
 extern float  _base_max_pos[3];
 extern float _base_home_pos[3];// home pos
 extern float _home_dir[3]; // home dirs
-
+extern float homing_feedrate[4];
 #if ENABLED(DELTA)
   #ifndef DELTA_RADIUS_TRIM_TOWER_1
     #define DELTA_RADIUS_TRIM_TOWER_1 0.0

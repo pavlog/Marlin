@@ -23,6 +23,8 @@ Note: Visualization and math - https://jsfiddle.net/9L42z9he/
   - added M452 - xyz home pos
   - added M98 - reports hysteresis (available only if DEFAULT_HYSTERESIS_MM defined)
   - added M99 - sets hysteresis (available only if DEFAULT_HYSTERESIS_MM defined)
+  - added M210 - Set the feedrates used for homing to the values specified in mm per minute. 
+
 
 
 About FIVE_BAR or SCARA_TYPE 2

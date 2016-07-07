@@ -188,6 +188,7 @@
  * M207 - Set retract length S[positive mm] F[feedrate mm/min] Z[additional zlift/hop], stays in mm regardless of M200 setting
  * M208 - Set recover=unretract length S[positive mm surplus to the M207 S*] F[feedrate mm/min]
  * M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.
+ * M210 - Set the feedrates used for homing to the values specified in mm per minute. 
  * M218 - Set hotend offset (in mm): T<extruder_number> X<offset_on_X> Y<offset_on_Y>
  * M220 - Set speed factor override percentage: S<factor in percent>
  * M221 - Set extrude factor override percentage: S<factor in percent>
@@ -295,7 +296,7 @@ static int cmd_queue_index_w = 0;
 static int commands_in_queue = 0;
 static char command_queue[BUFSIZE][MAX_CMD_SIZE];
 
-const float homing_feedrate[] = HOMING_FEEDRATE;
+float homing_feedrate[4] = HOMING_FEEDRATE;
 bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 int feedrate_multiplier = 100; //100->1 200->2
 int saved_feedrate_multiplier;
@@ -2291,6 +2292,10 @@ static void homeaxis(AxisEnum axis) {
     // Move towards the endstop until an endstop is triggered
     destination[axis] = 1.5 * max_length(axis) * axis_home_dir;
     feedrate = homing_feedrate[axis];
+     SERIAL_ECHOPAIR(">>> homefeedrate(", axis);
+     SERIAL_ECHOPAIR(">>> ", homing_feedrate[axis]);
+      SERIAL_ECHOLNPGM(")");
+
     line_to_destination();
     st_synchronize();
 
@@ -5353,6 +5358,20 @@ inline void gcode_M206() {
   sync_plan_position();
 }
 
+/**
+ * M206: Set Additional Homing Offset (X Y Z). SCARA aliases T=X, P=Y
+ */
+inline void gcode_M210() 
+{
+  for (int8_t i = X_AXIS; i <= E_AXIS; i++)
+  {
+    if (code_seen(axis_codes[i]))
+    {
+      homing_feedrate[(AxisEnum)i]=code_value();
+    }
+  }
+}
+
 #if ENABLED(DELTAXY)
   //M665 set deltaxy configurations A<ArmAX> B<ArmBX> L<ArmALen> M<ArmBLen> O<ArmAMountOffsetLen> P<ArmAMountOffsetAngle> S<segments_per_sec>
   inline void gcode_M665() 
@@ -7024,6 +7043,9 @@ void process_next_command() {
         break;
       case 206: // M206 additional homing offset
         gcode_M206();
+        break;
+      case 210: // M210 homing feedrate (mm/min)
+        gcode_M210();
         break;
 
       #if ENABLED(DELTA)
