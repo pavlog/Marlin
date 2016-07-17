@@ -2292,9 +2292,9 @@ static void homeaxis(AxisEnum axis) {
     // Move towards the endstop until an endstop is triggered
     destination[axis] = 1.5 * max_length(axis) * axis_home_dir;
     feedrate = homing_feedrate[axis];
-     SERIAL_ECHOPAIR(">>> homefeedrate(", axis);
-     SERIAL_ECHOPAIR(">>> ", homing_feedrate[axis]);
-      SERIAL_ECHOLNPGM(")");
+    //SERIAL_ECHOPAIR(">>> homefeedrate(", axis);
+    //SERIAL_ECHOPAIR(">>> ", homing_feedrate[axis]);
+    //SERIAL_ECHOLNPGM(")");
 
     line_to_destination();
     st_synchronize();
