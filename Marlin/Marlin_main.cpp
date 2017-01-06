@@ -579,7 +579,7 @@ void gcode_M114();
       if (DEBUGGING(LEVELING)) DEBUG_POS("sync_plan_position_delta", current_position);
     #endif
     calculate_delta(current_position);
-    plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);
+    plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS],current_position[X_AXIS], current_position[Y_AXIS]);
   }
 #endif
 
@@ -1521,17 +1521,17 @@ inline void set_homing_bump_feedrate(AxisEnum axis) {
 // (or from wherever it has been told it is located).
 //
 inline void line_to_current_position() {
-  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate / 60, active_extruder);
+  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate / 60, active_extruder,current_position[X_AXIS], current_position[Y_AXIS]);
 }
 inline void line_to_z(float zPosition) {
-  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate / 60, active_extruder);
+  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], zPosition, current_position[E_AXIS], feedrate / 60, active_extruder,current_position[X_AXIS], current_position[Y_AXIS]);
 }
 //
 // line_to_destination
 // Move the planner, not necessarily synced with current_position
 //
 inline void line_to_destination(float mm_m) {
-  plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], mm_m / 60, active_extruder);
+  plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], mm_m / 60, active_extruder,current_position[X_AXIS], current_position[Y_AXIS]);
 }
 inline void line_to_destination() {
   line_to_destination(feedrate);
@@ -1546,7 +1546,7 @@ inline void sync_plan_position() {
   #if ENABLED(DEBUG_LEVELING_FEATURE)
     if (DEBUGGING(LEVELING)) DEBUG_POS("sync_plan_position", current_position);
   #endif
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS],current_position[X_AXIS], current_position[Y_AXIS]);
 }
 inline void sync_plan_position_e() { plan_set_e_position(current_position[E_AXIS]); }
 inline void set_current_to_destination() { memcpy(current_position, destination, sizeof(current_position)); }
@@ -5893,10 +5893,10 @@ inline void gcode_M303() {
   /**
    * M370: SCARA q1 q2 angles
    */
-	#if !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
+	#if defined(FIVE_BAR) || (SCARA_TYPE>=1)
   inline void gcode_M370() 
   {
-    	if(Stopped == false) 
+    	if( IsRunning() )
 			{
 		    //                 \     /
 		    //                  \  /
@@ -7142,7 +7142,7 @@ void process_next_command() {
         gcode_M303();
         break;
 
-      #if ENABLED(SCARA)
+  #if ENABLED(SCARA)
 			#if !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
         case 360:  // M360 SCARA Theta pos1
           if (gcode_M360()) return;
@@ -7162,14 +7162,14 @@ void process_next_command() {
         case 365: // M365 Set SCARA scaling for X Y Z
           gcode_M365();
           break;
-  #else
-    case 370: // M370 - five bar q1 and q2 
-      #if !(defined(FIVE_BAR) || (SCARA_TYPE>=1))
-					gcode_M370();
-      #endif
-    break;
-	#endif
-      #endif // SCARA
+      #else
+        case 370: // M370 - five bar q1 and q2 
+          #if defined(FIVE_BAR) || (SCARA_TYPE>=1)
+              gcode_M370();
+          #endif
+          break;
+	    #endif
+   #endif // SCARA
 
       case 400: // M400 finish all moves
         gcode_M400();
@@ -7292,21 +7292,33 @@ void process_next_command() {
     case 450: // M450 xyz min limits
       for(int8_t i=0; i < 3; i++)
       {
-        if(code_seen(axis_codes[i])) _base_min_pos[i] = code_value();
+        if(code_seen(axis_codes[i]))
+        {
+          _base_min_pos[i] = code_value();
+          update_software_endstops((AxisEnum)i);
+        }
       }
       break;
 
     case 451: // M451 xyz max limits
       for(int8_t i=0; i < 3; i++)
       {
-        if(code_seen(axis_codes[i])) _base_max_pos[i] = code_value();
+        if(code_seen(axis_codes[i]))
+        {
+          _base_max_pos[i] = code_value();
+          update_software_endstops((AxisEnum)i);
+        }
       }
       break;
     
     case 452: // M452 xyz home pos
       for(int8_t i=0; i < 3; i++)
       {
-        if(code_seen(axis_codes[i])) _base_home_pos[i] = code_value();
+        if(code_seen(axis_codes[i]))
+        {
+          _base_home_pos[i] = code_value();
+          update_software_endstops((AxisEnum)i);
+        }
       }
       break;
     
@@ -7627,7 +7639,7 @@ void mesh_plan_buffer_line(float x, float y, float z, const float e, float feed_
       //SERIAL_ECHOPGM("delta[Y_AXIS]="); SERIAL_ECHOLN(delta[Y_AXIS]);
       //SERIAL_ECHOPGM("delta[Z_AXIS]="); SERIAL_ECHOLN(delta[Z_AXIS]);
 
-      plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], target[E_AXIS], feedrate / 60 * feedrate_multiplier / 100.0, active_extruder);
+      plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], target[E_AXIS], feedrate / 60 * feedrate_multiplier / 100.0, active_extruder,target[X_AXIS],target[Y_AXIS]);
     }
     return true;
   }
@@ -7854,9 +7866,9 @@ void plan_arc(
       #if ENABLED(AUTO_BED_LEVELING_FEATURE)
         adjust_delta(arc_target);
       #endif
-      plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], arc_target[E_AXIS], feed_rate, active_extruder);
+      plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], arc_target[E_AXIS], feed_rate, active_extruder,arc_target[X_AXIS],arc_target[Y_AXIS]);
     #else
-      plan_buffer_line(arc_target[X_AXIS], arc_target[Y_AXIS], arc_target[Z_AXIS], arc_target[E_AXIS], feed_rate, active_extruder);
+      plan_buffer_line(arc_target[X_AXIS], arc_target[Y_AXIS], arc_target[Z_AXIS], arc_target[E_AXIS], feed_rate, active_extruder,arc_target[X_AXIS],arc_target[Y_AXIS]);
     #endif
   }
 
@@ -7866,9 +7878,9 @@ void plan_arc(
     #if ENABLED(AUTO_BED_LEVELING_FEATURE)
       adjust_delta(target);
     #endif
-    plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], target[E_AXIS], feed_rate, active_extruder);
+    plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], target[E_AXIS], feed_rate, active_extruder,arc_target[X_AXIS],arc_target[Y_AXIS]);
   #else
-    plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feed_rate, active_extruder);
+    plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feed_rate, active_extruder,arc_target[X_AXIS],arc_target[Y_AXIS]);
   #endif
 
   // As far as the parser is concerned, the position is now == target. In reality the
@@ -8759,3 +8771,4 @@ void calculate_volumetric_multipliers() {
   for (int i = 0; i < EXTRUDERS; i++)
     volumetric_multiplier[i] = calculate_volumetric_multiplier(filament_size[i]);
 }
+

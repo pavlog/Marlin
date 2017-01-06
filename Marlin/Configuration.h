@@ -21,8 +21,8 @@
  */
 
 //#include "example_configurations/CNC/Configuration.h"
-//#include "example_configurations/SCARA/sscara/Configuration.h"
-#include "example_configurations/DeltaXY/Configuration.h"
+#include "example_configurations/SCARA/sscara/Configuration.h"
+//#include "example_configurations/DeltaXY/Configuration.h"
 
 /**
  * Configuration.h
