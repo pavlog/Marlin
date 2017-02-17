@@ -130,7 +130,7 @@ float calc_best_feedrate( const float* current_position, const float* destinatio
 
 //===========================================================================
 // insert a plan_buffer_line if required to handle any hysteresis
-void Hysteresis::InsertCorrection(const float &x, const float &y, const float &z, const float &e)
+void Hysteresis::InsertCorrection(const float &x, const float &y, const float &z, const float &e,const float& target_xmm, const float& target_ymm)
 {
   float destination[NUM_AXIS] = {x,y,z,e};
   unsigned char direction_bits = calc_direction_bits( current_position, destination );
@@ -147,13 +147,13 @@ void Hysteresis::InsertCorrection(const float &x, const float &y, const float &z
       if( direction_change_bits & (1<<axis) && (m_hysteresis_bits & (1<<axis)))
       {
         //... add the hysteresis
-        float hyst =  (((direction_bits&(1<<axis))!=0)?-m_hysteresis_mm[axis]:m_hysteresis_mm[axis]);
+        float hyst =  (((direction_bits&(1<<axis))!=0)?m_hysteresis_mm[axis]:m_hysteresis_mm[axis]);
      
-        SERIAL_PROTOCOLPGM(" hyst axis:");      
-        SERIAL_PROTOCOL(axis);
-        SERIAL_PROTOCOLPGM(" val:");      
-        SERIAL_PROTOCOL(hyst);
-        SERIAL_PROTOCOLLN("");
+        //SERIAL_PROTOCOLPGM(" hyst axis:");      
+        //SERIAL_PROTOCOL(axis);
+        //SERIAL_PROTOCOLPGM(" val:");      
+        //SERIAL_PROTOCOL(hyst);
+        //SERIAL_PROTOCOLLN("");
 
 
         fixed_pos[axis] = fixed_pos[axis] + hyst;
@@ -198,9 +198,14 @@ void Hysteresis::InsertCorrection(const float &x, const float &y, const float &z
       SERIAL_PROTOCOLLN("");
 //*/
       m_prev_direction_bits = direction_bits; // need to set these now to avoid recursion as plan_buffer_line calls this function
-      plan_buffer_line(fixed_pos[X_AXIS], fixed_pos[Y_AXIS], fixed_pos[Z_AXIS], fixed_pos[E_AXIS], best_feedrate, active_extruder);
+      #if ENABLED(SCARA)
+      plan_buffer_line(fixed_pos[X_AXIS], fixed_pos[Y_AXIS], fixed_pos[Z_AXIS], fixed_pos[E_AXIS], best_feedrate, active_extruder,target_xmm,target_ymm);
+      #else
+      plan_buffer_line(fixed_pos[X_AXIS], fixed_pos[Y_AXIS], fixed_pos[Z_AXIS], fixed_pos[E_AXIS], best_feedrate, active_extruder,target_xmm,target_ymm);
+      #endif
   }
   m_prev_direction_bits = direction_bits;
 }
+
 
 

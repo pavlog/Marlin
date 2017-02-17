@@ -30,7 +30,8 @@ public:
   void SetAxis( int axis, float mm );
   float GetAxis( int axis ) const;
   void ReportToSerial();
-  void InsertCorrection(const float &x, const float &y, const float &z, const float &e);
+  void InsertCorrection(const float &x, const float &y, const float &z, const float &e,const float& target_xmm, const float& target_ymm
+);
 private:
   float         m_hysteresis_mm[NUM_AXIS];
   unsigned char m_prev_direction_bits;
@@ -40,5 +41,6 @@ private:
 //===========================================================================
 
 extern Hysteresis hysteresis;
+
 
 

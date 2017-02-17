@@ -125,19 +125,20 @@ FORCE_INLINE uint8_t movesplanned() { return BLOCK_MOD(block_buffer_head - block
    * Add a new linear movement to the buffer. x, y, z are the signed, absolute target position in
    * millimeters. Feed rate specifies the (target) speed of the motion.
    */
-  void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, const uint8_t extruder);
+   // pavlog: real x and real y added for scara, but seems like it can be done for delta and other non cartesian (except corexy becasue some stuff alredy in, but can be replaced)
+  void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, const uint8_t extruder,const float& target_xmm, const float& target_ymm);
 
   /**
    * Set the planner positions. Used for G92 instructions.
    * Multiplies by axis_steps_per_unit[] to set stepper positions.
    * Clears previous speed values.
    */
-  void plan_set_position(float x, float y, float z, const float& e);
+  void plan_set_position(float x, float y, float z, const float& e,const float& target_xmm, const float& target_ymm);
 
 #else
 
-  void plan_buffer_line(const float& x, const float& y, const float& z, const float& e, float feed_rate, const uint8_t extruder);
-  void plan_set_position(const float& x, const float& y, const float& z, const float& e);
+  void plan_buffer_line(const float& x, const float& y, const float& z, const float& e, float feed_rate, const uint8_t extruder,const float& target_xmm, const float& target_ymm);
+  void plan_set_position(const float& x, const float& y, const float& z, const float& e,const float& target_xmm, const float& target_ymm);
 
 #endif // AUTO_BED_LEVELING_FEATURE || MESH_BED_LEVELING
 
@@ -196,3 +197,4 @@ FORCE_INLINE block_t* plan_get_current_block() {
 void reset_acceleration_rates();
 
 #endif // PLANNER_H
+

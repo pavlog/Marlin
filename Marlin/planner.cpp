@@ -137,6 +137,9 @@ volatile unsigned char block_buffer_tail;           // Index of the block to pro
 
 // The current position of the tool in absolute steps
 long position[NUM_AXIS];               // Rescaled from extern when axis_steps_per_unit are changed by gcode
+#if ENABLED(SCARA)
+long position_mm[2];// used for feedrate scara calculations
+#endif
 static float previous_speed[NUM_AXIS]; // Speed of previous path line segment
 static float previous_nominal_speed;   // Nominal speed of previous path line segment
 
@@ -559,13 +562,14 @@ float junction_deviation = 0.1;
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
 #if ENABLED(AUTO_BED_LEVELING_FEATURE) || ENABLED(MESH_BED_LEVELING)
-  void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, const uint8_t extruder)
+  void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, const uint8_t extruder,const float& target_xmm, const float& target_ymm)
 #else
-  void plan_buffer_line(const float& x, const float& y, const float& z, const float& e, float feed_rate, const uint8_t extruder)
+  void plan_buffer_line(const float& x, const float& y, const float& z, const float& e, float feed_rate, const uint8_t extruder,const float& target_xmm, const float& target_ymm)
 #endif  // AUTO_BED_LEVELING_FEATURE
 {
+
   #if defined(DEFAULT_HYSTERESIS_MM)
-    hysteresis.InsertCorrection(x,y,z,e);
+    hysteresis.InsertCorrection(x,y,z,e,target_xmm,target_ymm);
   #endif
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
@@ -699,7 +703,7 @@ float junction_deviation = 0.1;
       enable_x();
       enable_z();
     }
-    if (block->steps[Y_AXIS]) enable_y();
+    if (block->steps[Y_AXIS]) enable_y()f;
   #else
     if (block->steps[X_AXIS]) enable_x();
     if (block->steps[Y_AXIS]) enable_y();
@@ -805,6 +809,57 @@ float junction_deviation = 0.1;
     delta_mm[Z_HEAD] = dz / axis_steps_per_unit[C_AXIS];
     delta_mm[A_AXIS] = (dx + dz) / axis_steps_per_unit[A_AXIS];
     delta_mm[C_AXIS] = (dx - dz) / axis_steps_per_unit[C_AXIS];
+  #elif ENABLED(SCARA)
+    // TODO calculate real XY mm using forward
+    //SERIAL_ECHOPAIR("position_xmm: ", position_mm[X_AXIS]);
+    //SERIAL_ECHOPAIR(" position_ymm: ", position_mm[Y_AXIS]);
+    //SERIAL_EOL;
+    //SERIAL_ECHOPAIR("target_xmm: ", target_xmm);
+    //SERIAL_ECHOPAIR(" target_ymm: ", target_ymm);
+    //SERIAL_EOL;
+    float delta_mm[4];
+    float dx_mm = target_xmm - position_mm[X_AXIS];
+    float dy_mm = target_ymm - position_mm[Y_AXIS];
+    //SERIAL_ECHOPAIR("dx_mm: ", dx_mm);
+    //SERIAL_ECHOPAIR(" dy_mm: ", dy_mm);
+    //SERIAL_EOL;
+    delta_mm[X_AXIS] = dx / axis_steps_per_unit[X_AXIS];
+    delta_mm[Y_AXIS] = dy / axis_steps_per_unit[Y_AXIS];
+    delta_mm[Z_AXIS] = dz / axis_steps_per_unit[Z_AXIS];
+    //SERIAL_ECHOPAIR("delta_mm[X_AXIS]: ", delta_mm[X_AXIS]);
+    //SERIAL_ECHOPAIR(" delta_mm[Y_AXIS]: ", delta_mm[Y_AXIS]);
+    //SERIAL_EOL;
+    //if( delta_mm[X_AXIS]!=0.0 )
+    {
+      dx_mm = delta_mm[X_AXIS];// (delta_mm[X_AXIS]/360)*100*3.1415;//   delta_mm[X_AXIS];
+    }
+    //else
+    //{
+    //  dx_mm = delta_mm[X_AXIS];
+   // }
+   // if( delta_mm[Y_AXIS]!=0.0 )
+   {
+      dy_mm =  delta_mm[Y_AXIS];//(delta_mm[Y_AXIS]/360)*100*3.1415;//   delta_mm[X_AXIS];
+   }
+   // else
+    //{
+   //   dy_mm = delta_mm[Y_AXIS];
+    //}
+    //if( dy_mm==0.0 )
+    //{
+    //  dy_mm = (360/delta_mm[Y_AXIS])*100*3.1415;//   delta_mm[X_AXIS];
+    //}
+    //if( dx_mm==0.0 )
+    //{
+    //  dx_mm = delta_mm[X_AXIS];
+    //}
+    //if( dy_mm==0.0 )
+    //{
+    //  dy_mm = delta_mm[Y_AXIS];
+   // }
+    //SERIAL_ECHOPAIR("dx_mm: ", dx_mm);
+    //SERIAL_ECHOPAIR(" dy_mm: ", dy_mm);
+    //SERIAL_EOL;
   #else
     float delta_mm[4];
     delta_mm[X_AXIS] = dx / axis_steps_per_unit[X_AXIS];
@@ -822,6 +877,8 @@ float junction_deviation = 0.1;
         square(delta_mm[X_HEAD]) + square(delta_mm[Y_HEAD]) + square(delta_mm[Z_AXIS])
       #elif ENABLED(COREXZ)
         square(delta_mm[X_HEAD]) + square(delta_mm[Y_AXIS]) + square(delta_mm[Z_HEAD])
+      #elif ENABLED(SCARA)
+        square(dx_mm) + square(dy_mm) + square(delta_mm[Z_AXIS])
       #else
         square(delta_mm[X_AXIS]) + square(delta_mm[Y_AXIS]) + square(delta_mm[Z_AXIS])
       #endif
@@ -1089,7 +1146,10 @@ float junction_deviation = 0.1;
 
   // Update position
   for (int i = 0; i < NUM_AXIS; i++) position[i] = target[i];
-
+#if ENABLED(SCARA)
+  position_mm[X_AXIS] = target_xmm;
+  position_mm[Y_AXIS] = target_ymm;
+#endif
   planner_recalculate();
 
   st_wake_up();
@@ -1124,9 +1184,9 @@ float junction_deviation = 0.1;
  * On CORE machines stepper ABC will be translated from the given XYZ.
  */
 #if ENABLED(AUTO_BED_LEVELING_FEATURE) || ENABLED(MESH_BED_LEVELING)
-  void plan_set_position(float x, float y, float z, const float& e)
+  void plan_set_position(float x, float y, float z, const float& e,const float& target_xmm, const float& target_ymm)
 #else
-  void plan_set_position(const float& x, const float& y, const float& z, const float& e)
+  void plan_set_position(const float& x, const float& y, const float& z, const float& e,const float& target_xmm, const float& target_ymm)
 #endif // AUTO_BED_LEVELING_FEATURE || MESH_BED_LEVELING
   {
     #if ENABLED(MESH_BED_LEVELING)
@@ -1134,6 +1194,11 @@ float junction_deviation = 0.1;
     #elif ENABLED(AUTO_BED_LEVELING_FEATURE)
       apply_rotation_xyz(plan_bed_level_matrix, x, y, z);
     #endif
+
+#if ENABLED(SCARA)
+  position_mm[X_AXIS] = target_xmm;
+  position_mm[Y_AXIS] = target_ymm;
+#endif
 
     long nx = position[X_AXIS] = lround(x * axis_steps_per_unit[X_AXIS]),
          ny = position[Y_AXIS] = lround(y * axis_steps_per_unit[Y_AXIS]),
